@@ -1,0 +1,21 @@
+#' Resources consumed by each product.
+#'
+#' @format Resources consumed by each product.
+#' \itemize{
+#'   \item case
+#'   \item product_full: object for which resources are consumed (link with products).
+#'   \item activity_full: step of the process for which the resource is consumed (link with activities).
+#'   \item resource_full: resource consumed (link with resources).
+#'   \item cost_inventoriability: whether the resource consumed is a "product" or a "period" cost.
+#'   \item cost_traceability: whether the resource consumed is "direct", "common" or "joint".
+#'   \item cost_type: whether the resource consumed is a "prime" cost, a "conversion" cost or a "period" cost.
+#'   \item cost_driver: measure of activity to which the cost would be proportional if not constrainted by a contractual arrangement.
+#'   \item product_output: quantity of product(s) produced with the quantity of resource consumed (1 for unit costs, another number for batch or joint costs).
+#'   \item resource_consumed: quantity of resource consumed.
+#'   \item contract_full: contract under which the resource is obtained (link with contracts).
+#' }
+#' @docType data
+#' @keywords datasets
+#' @name case_consumptions
+#' @usage data("case_consumptions")
+"case_consumptions"

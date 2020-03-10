@@ -22,4 +22,6 @@ Imports:
     tidyr,
     chron,
     lubridate,
-    tibble
+    tibble,
+    randomNames,
+    FinancialMath
