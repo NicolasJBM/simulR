@@ -2,12 +2,13 @@
 #' @param headcount Numeric. Number of persons to generate.
 #' @return A dataframe with gender, ethnicity, first_name, last_name, pronoun, possessive and title.
 #' @importFrom randomNames randomNames
+#' @importFrom dplyr %>%
 #' @importFrom dplyr case_when
 #' @importFrom dplyr mutate
 #' @export
 
 
-simul_persons <- function(headcount = 2){
+create_persons <- function(headcount = 2){
   
   persons <- randomNames::randomNames(n = headcount, return.complete.data = TRUE) %>%
     dplyr::mutate(
