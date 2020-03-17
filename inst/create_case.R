@@ -103,7 +103,7 @@ create_case <- function(case = NA,
   
  
   
-  assets <- capacity %>%
+  assets_entries <- capacity %>%
     dplyr::select(-first_period, -unit) %>%
     dplyr::filter(contract %in% c("investment","lease")) %>%
     tidyr::pivot_wider(names_from = c(parameter), values_from = c(initialization)) %>%
@@ -114,13 +114,13 @@ create_case <- function(case = NA,
       date = start_date,
       rate = dplyr::case_when(
         contract == "lease" ~ company$interest_rate,
-        TRUE ~ NA
+        TRUE ~ 0
       ),
       resource = paste0(resource, " - ", asset_id)
     ) %>%
-    dplyr::select(date, object = resource, price = value, rate, lifetime, nature, destination)
-  
-  
+    dplyr::select(date, object = resource, price = value, rate, lifetime, nature, destination) %>%
+    purrr::pmap(simulR::record_assets) %>%
+    dplyr::bind_rows()
   
   
   

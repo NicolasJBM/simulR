@@ -55,8 +55,8 @@ record_assets <- function(date = Sys.Date(),
       date = rep(date,2),
       label = rep(paste0("purchase of ", object),2),
       account = c(nature, acc_invcash),
-      debit = c(price, 0),
-      credit = c(0, price)
+      debit = c(price,NA),
+      credit = c(NA,price)
     )
     
   } else if (type_asset == "lease"){
@@ -65,8 +65,8 @@ record_assets <- function(date = Sys.Date(),
       date = rep(date,2),
       label = rep(paste0("operating lease of ", object),2),
       account = c(nature, acc_leaseliab),
-      debit = c(price, 0),
-      credit = c(0, price)
+      debit = c(price,NA),
+      credit = c(NA,price)
     )
     
     
@@ -88,8 +88,8 @@ record_assets <- function(date = Sys.Date(),
         date = rep(date_depr,7),
         label = c(rep(label_depr,2),rep(label_interest,2),rep(label_payment,3)),
         account = c(destination,acc_depr,acc_leaseint,acc_accruedint,acc_leaseliab,acc_accruedint,acc_opcash),
-        debit = c(reimburs,0,interest,0,reimburs,interest,0),
-        credit = c(0,reimburs,0,interest,0,0,payment)
+        debit = c(reimburs,NA,interest,NA,reimburs,interest,NA),
+        credit = c(NA,reimburs,NA,interest,NA,NA,payment)
       )
       
     }
@@ -100,8 +100,8 @@ record_assets <- function(date = Sys.Date(),
       date = rep(date,2),
       label = rep(paste0("purchase of ", object),2),
       account = c(nature, acc_invcash),
-      debit = c(price, 0),
-      credit = c(0, price)
+      debit = c(price, NA),
+      credit = c(NA, price)
     )
     
     depreciation <- (price) / lifetime
@@ -117,8 +117,8 @@ record_assets <- function(date = Sys.Date(),
         date = rep(date_depr,2),
         label = rep(label_depr,2),
         account = c(destination, acc_depr),
-        debit = c(depreciation, 0),
-        credit = c(0, depreciation)
+        debit = c(depreciation, NA),
+        credit = c(NA, depreciation)
       )
       
     }

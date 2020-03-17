@@ -135,16 +135,16 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date+dso+15,2),
       label = rep(label_doubt,2),
       account = c(acc_dbtf,acc_rece),
-      debit = c(receivable,0),
-      credit = c(0,receivable)
+      debit = c(receivable,NA),
+      credit = c(NA,receivable)
     )
     label_writoff <- paste0("write-off the ", label_sale, " on ", date)
     entries[[6]] <- tibble::tibble(
       date = rep(date+dso+60,3),
       label = rep(label_writoff,3),
       account = c(acc_badd,acc_vatx,acc_dbtf),
-      debit = c(revenue,vat_amount,0),
-      credit = c(0,0,receivable)
+      debit = c(revenue,vat_amount,NA),
+      credit = c(NA,NA,receivable)
     )
     
   } else if (situation == "sales return"){
@@ -162,8 +162,8 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date_return,3),
       label = rep(label_return,3),
       account = c(acc_rtrn,acc_vatx,acc_rece),
-      debit = c(cancel_rev,cancel_vat,0),
-      credit = c(0,0,cancel_receivable)
+      debit = c(cancel_rev,cancel_vat,NA),
+      credit = c(NA,NA,cancel_receivable)
     )
     label_back <- paste0("return of ", quantity_returned, " units on the ", label_sale, " on ", date)
     back_inventory <- quantity_returned * unit_cost
@@ -171,8 +171,8 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date_return,4),
       label = rep(label_return,4),
       account = c(acc_inve,acc_cogs,acc_disp,acc_inve),
-      debit = c(back_inventory,0,back_inventory,0),
-      credit = c(0,back_inventory,0,back_inventory)
+      debit = c(back_inventory,NA,back_inventory,NA),
+      credit = c(NA,back_inventory,NA,back_inventory)
     )
     earliness <- floor(5*runif(1))
     label_cashin <- paste0("received payment for the ", label_sale, " on ", date)
@@ -183,8 +183,8 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date+dso-earliness,4),
       label = rep(label_cashin,4),
       account = c(acc_cash,acc_disc,acc_vatx,acc_rece),
-      debit = c(new_receipt, cancel_new_rev, cancel_new_vat,0),
-      credit = c(0,0,0,new_receivable)
+      debit = c(new_receipt, cancel_new_rev, cancel_new_vat,NA),
+      credit = c(NA,NA,NA,new_receivable)
     )
     
   } else if (situation == "pay very late"){
@@ -194,8 +194,8 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date+dso+15,2),
       label = rep(label_doubt,2),
       account = c(acc_dbtf,acc_rece),
-      debit = c(receivable,0),
-      credit = c(0,receivable)
+      debit = c(receivable,NA),
+      credit = c(NA,receivable)
     )
     lateness <- 30 + floor(10*runif(1))
     label_cashin <- paste0("received payment for the ", label_sale, " on ", date)
@@ -203,8 +203,8 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date+dso+lateness,2),
       label = rep(label_cashin,2),
       account = c(acc_cash,acc_dbtf),
-      debit = c(receivable,0),
-      credit = c(0,receivable)
+      debit = c(receivable,NA),
+      credit = c(NA,receivable)
     )
     
   } else if (situation == "pay late"){
@@ -215,8 +215,8 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date+dso+lateness,2),
       label = rep(label_cashin,2),
       account = c(acc_cash,acc_rece),
-      debit = c(receivable,0),
-      credit = c(0,receivable)
+      debit = c(receivable,NA),
+      credit = c(NA,receivable)
     )
     
   } else {
@@ -230,8 +230,8 @@ record_sales <- function(date = Sys.Date(),
       date = rep(date+dso-earliness,4),
       label = rep(label_cashin,4),
       account = c(acc_cash,acc_disc,acc_vatx,acc_rece),
-      debit = c(receipt, cancel_rev, cancel_vat,0),
-      credit = c(0,0,0,receivable)
+      debit = c(receipt, cancel_rev, cancel_vat,NA),
+      credit = c(NA,NA,NA,receivable)
     )
     
   }
