@@ -127,7 +127,5 @@ record_assets <- function(date = Sys.Date(),
   
   entries <- dplyr::bind_rows(entries)
   
-  entries
-  
   return(entries)
 }

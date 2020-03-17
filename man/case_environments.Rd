@@ -13,7 +13,7 @@
 \item income_tax: percentage of EBT for the State.
 \item base_volume: period volume serving as reference.
 \item sensitivity_price: sales' sensitivity to price differences.
-\item sensitivity_prime_cost: sales' sensitivity to prime costs (proxy for quality) differences.
+\item sensitivity_quality: sales' sensitivity to quality (proxied by standard prime costs) differences.
 \item sensitivity_dso: sales sensitivity to differences in credit terms.
 \item sensitivity_advertising: sales sensitivity to differences in advertising expenses.
 \item sensitivity_commissions: sales sensitivity to differences in sales commissions.

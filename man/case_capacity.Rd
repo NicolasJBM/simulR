@@ -11,7 +11,7 @@
 \item nature_label: label of the account from which the resource comes.
 \item destination: account number to which the resource goes.
 \item destination_label: label of the account to which the resource goes.
-\item contract: type of contract governing the transfer of resource: "purchase" , "rental", "employment", "lease", or "investment".
+\item contract: type of contract governing the transfer of resource: "sale", "purchase" , "employment", or "investment".
 \item resource: type of resource transferred.
 \item parameter: kind of information provided about the resource transfer.
 \item unit: unit of the parameter.

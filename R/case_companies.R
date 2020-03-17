@@ -14,6 +14,9 @@
 #'   \item cost_of_capital: rate of return required by shareholders.
 #'   \item debt_share: proportion of the capital employed financed by debt at the beginning.
 #'   \item debt_years: number of years over which the debt was contracted.
+#'   \item cash_buffer: percentage of total initial investment added as cash to finance aoperations.
+#'   \item risk_customer: risk of an issue with collection.
+#'   \item risk_purchaser: risk of an issue (losing a discount) with payments
 #' }
 #' @docType data
 #' @keywords datasets

@@ -28,19 +28,19 @@
 
 
 record_sales <- function(date = Sys.Date(),
-                        object = "units",
-                        quantity = 100,
-                        price = 10,
-                        discount = 0.05,
-                        vat = 0.2,
-                        dso = 30,
-                        unit_cost = 5,
-                        sales_commission = 0.1,
-                        labor_tax = 0.5,
-                        dco = 15,
-                        account_increment = 0,
-                        situation = NULL,
-                        risk = 0.1){
+                         object = "units",
+                         quantity = 100,
+                         price = 10,
+                         discount = 0.05,
+                         vat = 0.2,
+                         dso = 30,
+                         unit_cost = 5,
+                         sales_commission = 0.1,
+                         labor_tax = 0.5,
+                         dco = 15,
+                         account_increment = 0,
+                         situation = NULL,
+                         risk = 0.1){
   
   entries <- list()
   
@@ -71,8 +71,8 @@ record_sales <- function(date = Sys.Date(),
     date = rep(date,3),
     label = rep(label_sale,3),
     account = c(acc_rece,acc_reve,acc_vatx),
-    debit = c(receivable,0,0),
-    credit = c(0,revenue, vat_amount)
+    debit = c(receivable,NA,NA),
+    credit = c(NA,revenue, vat_amount)
   )
   
   
@@ -82,8 +82,8 @@ record_sales <- function(date = Sys.Date(),
     date = rep(date,2),
     label = rep(label_inventory,2),
     account = c(acc_cogs,acc_inve),
-    debit = c(out_inventory,0),
-    credit = c(0,out_inventory)
+    debit = c(out_inventory,NA),
+    credit = c(NA,out_inventory)
   )
   
   
@@ -95,8 +95,8 @@ record_sales <- function(date = Sys.Date(),
     date = rep(date,3),
     label = rep(label_commission,3),
     account = c(acc_sell,acc_comm,acc_cctx),
-    debit = c(selling_expense,0,0),
-    credit = c(0,commission,commission_tax)
+    debit = c(selling_expense,NA,NA),
+    credit = c(NA,commission,commission_tax)
   )
   
   label_paycom <- paste0("pay commission on the ", label_sale, " on ", date)
@@ -108,8 +108,8 @@ record_sales <- function(date = Sys.Date(),
     date = rep(date_com,2),
     label = rep(label_paycom,2),
     account = c(acc_comm,acc_cash),
-    debit = c(commission,0),
-    credit = c(0,commission)
+    debit = c(commission,NA),
+    credit = c(NA,commission)
   )
   
   
@@ -237,8 +237,6 @@ record_sales <- function(date = Sys.Date(),
   }
   
   entries <- dplyr::bind_rows(entries)
-  
-  entries
   
   return(entries)
 }

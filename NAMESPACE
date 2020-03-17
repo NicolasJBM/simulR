@@ -2,6 +2,7 @@
 
 export(create_persons)
 export(record_assets)
+export(record_purchases)
 export(record_sales)
 export(wiggle)
 importFrom(FinancialMath,amort.period)
