@@ -13,19 +13,21 @@
 #' @param account_increment Integer. Last two digits of an account number indicating the destination.
 #' @param situation         Character. NULL or specify one of the following situation: "default", "sales return", "pay very late" or "pay late" 
 #' @param risk              Double. Number between 0 and 1 indicating the risk on the sale, affecting the probability of different situations.
-#' @return A new value
+#' @return A tibble of journal entries.
 #' @importFrom dplyr case_when
 #' @importFrom tibble tibble
 #' @importFrom lubridate as_date
 #' @importFrom lubridate year
 #' @importFrom lubridate month
+#' @importFrom lubridate days_in_month
+#' @importFrom lubridate day
 #' @importFrom dplyr bind_rows
 #' @importFrom stats runif
 #' @export
 
 
 
-record_sale <- function(date = Sys.Date(),
+record_sales <- function(date = Sys.Date(),
                         object = "units",
                         quantity = 100,
                         price = 10,
@@ -98,7 +100,10 @@ record_sale <- function(date = Sys.Date(),
   )
   
   label_paycom <- paste0("pay commission on the ", label_sale, " on ", date)
-  date_com <- lubridate::as_date(paste0(lubridate::year(date+dco), "-", lubridate::month(date+dco), "-28"))
+  
+  date_com <- date+dco
+  lubridate::day(date_com) <- 1
+  lubridate::day(date_com) <- lubridate::days_in_month(date_com)
   entries[[4]] <- tibble::tibble(
     date = rep(date_com,2),
     label = rep(label_paycom,2),

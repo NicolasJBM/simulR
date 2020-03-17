@@ -3,20 +3,7 @@
 #' @format List of general parameters for a simulation.
 #' \itemize{
 #'   \item case: id of the case.
-#'   \item template: id of the template within the case.
-#'   \item mono_product: whether the case relies on a single product.
-#'   \item mono_material: whether the case relies on only one kind of raw materials.
-#'   \item joint_products: whether the case is about joint products.
-#'   \item costing: costing method used: "actual", "normal" or "standard".
-#'   \item allocation: allocation method used: "direct", "sequential" or "reciprocal".
-#'   \item inventory_fp_policy: whether finished products are managed to "smooth production" or in "just in time".
-#'   \item inventory_rm_policy: whether finished products are managed to "smooth purchases" or in "just in time".
-#'   \item desired_rate_of_return: minimum rate of return on assets desired.
-#'   \item interest_rate: initial interest rate.
-#'   \item overdraft_rate: interest rate applied on advances from the bank.
-#'   \item cost_of_capital: rate of return required by shareholders.
-#'   \item debt_share: proportion of the capital employed financed by debt at the beginning.
-#'   \item debt_years: number of years over which the debt was contracted.
+#'   \item environment_type: indication about the type of environment.
 #'   \item value_added_tax: percentage of VAT on purchases.
 #'   \item labor_tax: percentage of tax applied on wages.
 #'   \item income_tax: percentage of EBT for the State.
@@ -32,6 +19,6 @@
 #' }
 #' @docType data
 #' @keywords datasets
-#' @name case_templates
-#' @usage data("case_templates")
-"case_templates"
+#' @name case_environments
+#' @usage data("case_environments")
+"case_environments"
