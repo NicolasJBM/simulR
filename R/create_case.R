@@ -242,29 +242,12 @@ create_case <- function(case = NA,
   rm(environments, seasons, accounts)
   
   base_company <- list()
-  base_company$company <- company %>%
-    dplyr::mutate(period = list(c(periods$period[[1]],periods$period[[2]]))) %>%
-    tidyr::unnest(period) %>%
-    dplyr::select(period, dplyr::everything()) %>%
-    dplyr::arrange(period)
+  base_company$company <- company
   base_company$capacity <- capacity %>%
-    tidyr::pivot_longer(cols = c("initialization","first_period"), names_to = "period", values_to = "value") %>%
-    mutate(period = case_when(
-      period == "initialization" ~ periods$period[[1]],
-      TRUE ~ periods$period[[2]]
-    )) %>%
-    select(period, everything()) %>%
-    dplyr::arrange(period)
-  base_company$activity <- activity %>%
-    dplyr::mutate(period = list(c(periods$period[[1]],periods$period[[2]]))) %>%
-    tidyr::unnest(period) %>%
-    dplyr::select(period, dplyr::everything()) %>%
-    dplyr::arrange(period)
-  base_company$costing <- costing %>%
-    dplyr::mutate(period = list(c(periods$period[[1]],periods$period[[2]]))) %>%
-    tidyr::unnest(period) %>%
-    dplyr::select(period, dplyr::everything()) %>%
-    dplyr::arrange(period)
+    dplyr::select(-initialization) %>%
+    dplyr::rename(value = first_period)
+  base_company$activity <- activity
+  base_company$costing <- costing
   base_company$journal <- journal
   base_company$inventory <- inventory
   
