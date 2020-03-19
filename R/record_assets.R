@@ -31,9 +31,9 @@ record_assets <- function(date = Sys.Date(),
   
   acc_opcash <- 10100
   acc_invcash <- 10200
-  acc_accruedint <- 23100
-  acc_leaseliab <- 27200
-  acc_leaseint  <- 67200
+  acc_accruedint <- 23300
+  acc_leaseliab <- 26300
+  acc_leaseint  <- 66300
   
   type_asset <- dplyr::case_when(
     nature < 15200 & nature >= 15100 ~ "land",
@@ -80,7 +80,7 @@ record_assets <- function(date = Sys.Date(),
       lubridate::day(date_depr) <- 1
       lubridate::month(date_depr) <- lubridate::month(date_depr) + 1
       lubridate::day(date_depr) <- lubridate::days_in_month(date_depr)
-      simfin <- FinancialMath::amort.period(Loan=price,n=lifetime,i=rate/12, t=2)
+      simfin <- FinancialMath::amort.period(Loan=price,n=lifetime,i=rate/12, t=i)
       payment <- simfin[2]
       interest <- simfin[6]
       reimburs <- simfin[7]

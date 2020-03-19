@@ -25,4 +25,5 @@ Imports:
     tibble,
     randomNames,
     FinancialMath,
-    stringr
+    stringr,
+    purrr

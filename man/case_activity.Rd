@@ -8,6 +8,7 @@
 \itemize{
 \item case: id of the case.
 \item activity: name of the activity.
+\item step: order in which activities unfold.
 \item phase: whether resources are consumed for "sales", "prroduction", or "support".
 \item output_standard_quantity: quantity produced.
 \item output_unit: unit of the quantity produced.
