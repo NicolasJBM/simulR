@@ -6,6 +6,7 @@
 #' @param number_production_steps Integer. Number of sequential production steps.
 #' @param number_joint_products   Integer. Number of products which are joint.
 #' @param start_date              Date. At which date the first balance sheet is initialized.
+#' @param number_years            Integer. How many years should the time series last.
 #' @importFrom dplyr %>%
 #' @importFrom dplyr filter 
 #' @importFrom dplyr sample_n
@@ -16,11 +17,12 @@
 #' @importFrom dplyr everything
 #' @importFrom dplyr arrange
 #' @importFrom purrr pmap
+#' @importFrom purrr map
 #' @importFrom tidyr pivot_wider 
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr unnest
 #' @return list of sublists necessary information for simulation and documentation:
-#' \item{base_market}{parameters about the environment, seasonality, chart of accounts and periods in the case.}
+#' \item{base_market}{parameters about the environment, chart of accounts and market in the case.}
 #' \item{company}{parameters about the company, its capacity, activity, costing system, inventories and beginning of journal.}
 #' @export
 
@@ -31,7 +33,8 @@ create_case <- function(case = NA,
                         number_materials = 5,
                         number_production_steps = 1,
                         number_joint_products = 0,
-                        start_date = Sys.Date()){
+                        start_date = Sys.Date(),
+                        number_years = 5){
   
   
   stopifnot(
@@ -119,7 +122,9 @@ create_case <- function(case = NA,
   
   seasons <- simulR::case_seasons %>%
     dplyr::filter(case == company$case) %>%
-    dplyr::select(-case)
+    dplyr::select(-case) %>%
+    tidyr::pivot_longer(cols = c("monday","tuesday","wednesday","thursday","friday","saturday","sunday"),
+                        names_to = "weekday", values_to = "coefficient")
   
   accounts <- simulR::case_accounts %>%
     dplyr::filter(case == company$case) %>%
@@ -137,7 +142,15 @@ create_case <- function(case = NA,
     dplyr::filter(case == company$case) %>%
     dplyr::select(-case)
   
- 
+  market <- simulR::create_market(start = start_date,
+                                  years = number_years,
+                                  base_volume = environments$base_volume,
+                                  seasons = seasons) %>%
+    dplyr::mutate(date = purrr::map(date, simulR::create_period)) %>%
+    tidyr::unnest(date)
+  
+  rm(seasons)
+  
   ###################################################################################################
   
   lta_entries <- capacity %>%
@@ -206,7 +219,8 @@ create_case <- function(case = NA,
     dplyr::left_join(accounts, by = "account") %>%
     dplyr::select(date, label, account, account_label,
                   account_generic, account_subcategory, account_category, account_statement,
-                  debit, credit)
+                  debit, credit) %>%
+    dplyr::filter(date %in% market$date)
   
   
   rm(assets_entries, finance_entries)
@@ -222,24 +236,15 @@ create_case <- function(case = NA,
     select(date, resource, quantity, price, value)
   
   
-  ###################################################################################################
-  
-  
-  periods <- journal$date %>%
-    unique() %>%
-    map(simulR::create_period) %>%
-    dplyr::bind_rows()
-  
   
   ###################################################################################################
   
   base_market <- list()
   base_market$environments <- environments
-  base_market$seasons <- seasons
   base_market$accounts <- accounts
-  base_market$periods <- periods
+  base_market$market <- market
   
-  rm(environments, seasons, accounts)
+  rm(environments, accounts)
   
   base_company <- list()
   base_company$company <- company

@@ -10,6 +10,7 @@
 
 create_period <- function(date){
   
+  date <- lubridate::as_date(date)
   year <- lubridate::year(date)
   month <- lubridate::month(date)
   lastday <- lubridate::days_in_month(date)

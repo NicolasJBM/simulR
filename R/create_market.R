@@ -5,7 +5,6 @@
 #' @param trend       Double. Linear trader across all periods.
 #' @param randomness  Double. Percentage of random variation for the demand.
 #' @param seasons     Tibble. "week", "weekday" and "coefficient" indicating the distribution.
-#' @param periodicity Character. Whether the market should be defined at the "year", "month" or "day" level.
 #' @return A tibble with the market size for eachh period.
 #' @importFrom chron seq.dates
 #' @importFrom lubridate year
@@ -23,6 +22,7 @@
 #' @importFrom dplyr %>%
 #' @importFrom dplyr select
 #' @importFrom dplyr case_when
+#' @importFrom purrr map_dbl
 #' @export
 
 
@@ -31,17 +31,20 @@ create_market <- function(start = Sys.Date(),
                           base_volume = 1000,
                           trend = 1/20000,
                           randomness = 0.10,
-                          seasons = NULL,
-                          periodicity = "month"){
+                          seasons = NULL){
   
   stopifnot(
     is.numeric(years),
     is.numeric(base_volume),
     is.numeric(trend) & trend > -1 & trend < 1,
     is.numeric(randomness) & randomness >= 0,
-    names(seasons) == c("week","weekday","coefficient"),
-    periodicity %in% c("year","month","day")
+    names(seasons) == c("week","weekday","coefficient")
   )
+  
+  
+  # bind variables
+  actual <- NULL
+  working_day <- NULL
   
   
   market <- data.frame(
@@ -66,56 +69,21 @@ create_market <- function(start = Sys.Date(),
   
   market <- market[order(market$sequence),]
   
-  market$market <- ((base_volume * market$coefficient)*(1+trend*market$sequence))
-  market$market[market$market<0] <- 0
+  market$coefficient <- market$coefficient*(1+trend*market$sequence)
+  market$coefficient <- 1 + (market$coefficient-min(market$coefficient))/(max(market$coefficient)/min(market$coefficient))
+  market$market <- base_volume * market$coefficient
+  market$market[market$market < 0] <- 0
   market$market <- sapply(market$market, wiggle, delta = randomness)
   market$market <- floor(market$market)
   
   market <- market[, c("sequence","date","year","month","week","day","weekday","market")]
   
-  
-  if (periodicity == "year"){
-    
-    market <- market %>%
-      dplyr::group_by(year) %>%
-      dplyr::filter(market > 0) %>%
-      dplyr::summarise(market = sum(market), working_days = n()) %>%
-      dplyr::mutate(period = as.character(year)) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(period, market, working_days) %>%
-      dplyr::filter(working_days > 200)
-    
-  } else if(periodicity == "month"){
-    
-    market <- market %>%
-      dplyr::group_by(year, month) %>%
-      dplyr::filter(market > 0) %>%
-      dplyr::summarise(market = sum(market), working_days = n()) %>%
-      dplyr::mutate(period = dplyr::case_when(
-        nchar(month) == 1 ~ paste0(year, "-0", month),
-        TRUE ~ paste0(year, "-", month)
-      )) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(period, market, working_days) %>%
-      dplyr::filter(working_days > 15)
-    
-  } else {
-    
-    market <- market %>%
-      dplyr::filter(market > 0) %>%
-      dplyr::mutate(working_days = 1) %>%
-      dplyr::mutate(period = dplyr::case_when(
-        nchar(month) == 1 ~ paste0(year, "-0", month),
-        TRUE ~ paste0(year, "-", month)
-      ))  %>%
-      dplyr::mutate(period = dplyr::case_when(
-        nchar(day) == 1 ~ paste0(period, "-0", day),
-        TRUE ~ paste0(period, "-", day)
-      )) %>%
-      dplyr::select(period, market, working_days)
-    
-  }
-  
+  market <- market %>%
+    dplyr::mutate(working_day = as.numeric(market > 0)) %>%
+    dplyr::select(date, market, working_day) %>%
+    dplyr::mutate(actual = purrr::map_dbl(market, simulR::wiggle, delta = 0.2)) %>%
+    dplyr::mutate(actual = round(actual,0)) %>%
+    dplyr::select(date, working_day, forecast = market, actual)
   
   return(market)
 }

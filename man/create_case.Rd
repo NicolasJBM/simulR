@@ -11,7 +11,8 @@ create_case(
   number_materials = 5,
   number_production_steps = 1,
   number_joint_products = 0,
-  start_date = Sys.Date()
+  start_date = Sys.Date(),
+  number_years = 5
 )
 }
 \arguments{
@@ -28,10 +29,12 @@ create_case(
 \item{number_joint_products}{Integer. Number of products which are joint.}
 
 \item{start_date}{Date. At which date the first balance sheet is initialized.}
+
+\item{number_years}{Integer. How many years should the time series last.}
 }
 \value{
 list of sublists necessary information for simulation and documentation:
-\item{base_market}{parameters about the environment, seasonality, chart of accounts and periods in the case.}
+\item{base_market}{parameters about the environment, chart of accounts and market in the case.}
 \item{company}{parameters about the company, its capacity, activity, costing system, inventories and beginning of journal.}
 }
 \description{
