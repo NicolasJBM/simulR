@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_persons.R
 \name{create_persons}
 \alias{create_persons}
-\title{Prepare figures for small exercises about the high-low method of cost estimation.}
+\title{Create people for cases and exercises.}
 \usage{
 create_persons(headcount = 2)
 }
@@ -13,5 +13,5 @@ create_persons(headcount = 2)
 A dataframe with gender, ethnicity, first_name, last_name, pronoun, possessive and title.
 }
 \description{
-Prepare figures for small exercises about the high-low method of cost estimation.
+Create people for cases and exercises.
 }

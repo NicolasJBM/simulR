@@ -1,9 +1,8 @@
-#' Functions generating cases for exercises
+#' Create a base market and a base profile for companies based on case selection criteria.
 #' @param case                  Character vector. Names of the case to select.
 #' @param number_cost_objects     Integer. Number of different produts sold.
 #' @param number_cost_pools       Integer. Number of different cost pools used.
 #' @param number_materials        Integer. Number of different materials used.
-#' @param number_production_steps Integer. Number of sequential production steps.
 #' @param number_joint_products   Integer. Number of products which are joint.
 #' @param start_date              Date. At which date the first balance sheet is initialized.
 #' @param number_years            Integer. How many years should the time series last.
@@ -22,8 +21,8 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr unnest
 #' @return list of sublists necessary information for simulation and documentation:
-#' \item{base_market}{parameters about the environment, chart of accounts and market in the case.}
-#' \item{company}{parameters about the company, its capacity, activity, costing system, inventories and beginning of journal.}
+#' \item{base_market}{parameters about the environment, chart of accounts, resources and market in the case.}
+#' \item{base_company}{parameters about the company, its capacity, technology and underlying costing system, beginning of journal and censuses of various resources.}
 #' @export
 
 
@@ -31,7 +30,6 @@ create_case <- function(case = NA,
                         number_cost_objects = 3,
                         number_cost_pools = 3,
                         number_materials = 5,
-                        number_production_steps = 1,
                         number_joint_products = 0,
                         start_date = Sys.Date(),
                         number_years = 5){
@@ -97,11 +95,6 @@ create_case <- function(case = NA,
     } else {
       company <- dplyr::filter(company, number_materials == number_materials)
     }
-    if (is.na(number_production_steps)){
-      company <- company
-    } else {
-      company <- dplyr::filter(company, number_production_steps == number_production_steps)
-    }
     if (is.na(number_joint_products)){
       company <- company
     } else {
@@ -130,15 +123,15 @@ create_case <- function(case = NA,
     dplyr::filter(case == company$case) %>%
     dplyr::select(-case)
   
+  resources <- simulR::case_resources %>%
+    dplyr::filter(case == company$case) %>%
+    dplyr::select(-case)
+  
   capacity <- simulR::case_capacity %>%
     dplyr::filter(case == company$case) %>%
     dplyr::select(-case)
   
-  activity <- simulR::case_activity %>%
-    dplyr::filter(case == company$case) %>%
-    dplyr::select(-case)
-  
-  costing <- simulR::case_costing %>%
+  technology <- simulR::case_technology %>%
     dplyr::filter(case == company$case) %>%
     dplyr::select(-case)
   
@@ -165,7 +158,7 @@ create_case <- function(case = NA,
       resource = paste0(resource, " - ", asset_id)
     ) %>%
     dplyr::select(date, object = resource, price, rate, lifetime, nature, destination) %>%
-    purrr::pmap(simulR::record_assets) %>%
+    purrr::pmap(simulR::record_investment) %>%
     dplyr::bind_rows()
   
   assets_entries <- capacity %>%
@@ -173,12 +166,12 @@ create_case <- function(case = NA,
     dplyr::filter(contract == "purchase") %>%
     tidyr::pivot_wider(names_from = c(parameter), values_from = c(initialization)) %>%
     dplyr::filter(quantity >= 1) %>%
-    dplyr::select(object = resource, quantity, price, dpo, discount, lifetime, nature, destination) %>%
+    dplyr::select(object = resource, quantity, price, dpo, discount, lifetime, risk, nature, destination) %>%
     dplyr::mutate(
-      date = start_date, vat = environments$value_added_tax, risk = company$risk_purchaser
+      date = start_date, vat = environments$value_added_tax
     ) %>%
     dplyr::select(date, object, quantity, price, discount, vat, dpo, risk, lifetime, nature, destination) %>%
-    purrr::pmap(simulR::record_purchases) %>%
+    purrr::pmap(simulR::record_purchase) %>%
     dplyr::bind_rows() %>% 
     dplyr::bind_rows(lta_entries)
   
@@ -190,7 +183,7 @@ create_case <- function(case = NA,
   
   finance_entries <- capacity %>%
     dplyr::select(-first_period, -unit) %>%
-    dplyr::filter(contract == "financing") %>%
+    dplyr::filter(contract == "finance") %>%
     tidyr::pivot_wider(names_from = c(parameter), values_from = c(initialization)) %>%
     dplyr::filter(quantity > 0) %>%
     dplyr::mutate(date = start_date) %>%
@@ -227,14 +220,36 @@ create_case <- function(case = NA,
   
   ###################################################################################################
   
-  inventory <- capacity %>%
-    filter(parameter %in% c("quantity","price"), nature >= 13000 & nature < 14000 | nature >= 31000 & nature < 34000) %>%
-    select(resource, parameter, initialization) %>%
-    pivot_wider(names_from = c("parameter"), values_from = c("initialization")) %>%
-    filter(quantity > 0) %>%
-    mutate(date = start_date, value = quantity * price) %>%
-    select(date, resource, quantity, price, value)
   
+  census <- list()
+  
+  census$finished_products <- capacity %>%
+    dplyr::filter(nature >= 13100, nature < 13200) %>%
+    dplyr::select(resource, parameter, initialization) %>%
+    tidyr::pivot_wider(names_from = c("parameter"), values_from = c("initialization")) %>%
+    dplyr::mutate(date = start_date, value = quantity * price) %>%
+    dplyr::select(date, resource, quantity, value)
+  
+  census$raw_materials <- capacity %>%
+    dplyr::filter(destination >= 13300, destination < 13400) %>%
+    dplyr::select(resource, parameter, initialization) %>%
+    tidyr::pivot_wider(names_from = c("parameter"), values_from = c("initialization")) %>%
+    dplyr::mutate(date = start_date, value = quantity * price) %>%
+    dplyr::select(date, resource, quantity, value)
+  
+  census$assets <- capacity %>%
+    dplyr::filter(nature >= 15000, nature < 16000) %>%
+    dplyr::select(resource, parameter, initialization) %>%
+    tidyr::pivot_wider(names_from = c("parameter"), values_from = c("initialization")) %>%
+    dplyr::mutate(date = start_date, capacity = quantity * capacity) %>%
+    dplyr::select(date, resource, capacity)
+    
+  census$equity <- capacity %>%
+    dplyr::filter(nature >= 31000, nature < 39000) %>%
+    dplyr::select(resource, parameter, initialization) %>%
+    tidyr::pivot_wider(names_from = c("parameter"), values_from = c("initialization")) %>%
+    dplyr::mutate(date = start_date, value = quantity * price) %>%
+    dplyr::select(date, resource, quantity, value)
   
   
   ###################################################################################################
@@ -242,6 +257,7 @@ create_case <- function(case = NA,
   base_market <- list()
   base_market$environments <- environments
   base_market$accounts <- accounts
+  base_market$resources <- resources
   base_market$market <- market
   
   rm(environments, accounts)
@@ -251,12 +267,13 @@ create_case <- function(case = NA,
   base_company$capacity <- capacity %>%
     dplyr::select(-initialization) %>%
     dplyr::rename(value = first_period)
-  base_company$activity <- activity
-  base_company$costing <- costing
+  base_company$technology <- technology
   base_company$journal <- journal
-  base_company$inventory <- inventory
+  base_company$profile <- tibble::tibble(period = "", resource = "", dso = 0, price = 0, discount = 0, commission = 0, advertising = 0, cost = 0, attractiveness = 0, demand = 0)
+  base_company$activity <- tibble::tibble(period = "", resource = "", activity = "", quantity = 0, price = 0)
+  base_company$census <- census
   
-  rm(company, capacity, activity, costing, journal)
+  rm(company, capacity, technology, journal, census)
   
   results <- list()
   results$base_market <- base_market

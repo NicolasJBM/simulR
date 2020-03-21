@@ -5,7 +5,7 @@
 #' @param trend       Double. Linear trader across all periods.
 #' @param randomness  Double. Percentage of random variation for the demand.
 #' @param seasons     Tibble. "week", "weekday" and "coefficient" indicating the distribution.
-#' @return A tibble with the market size for eachh period.
+#' @return A tibble with the market size (forcast and actual) for each period.
 #' @importFrom chron seq.dates
 #' @importFrom lubridate year
 #' @importFrom lubridate month
@@ -45,6 +45,7 @@ create_market <- function(start = Sys.Date(),
   # bind variables
   actual <- NULL
   working_day <- NULL
+  weekday <- NULL
   
   
   market <- data.frame(
@@ -70,7 +71,7 @@ create_market <- function(start = Sys.Date(),
   market <- market[order(market$sequence),]
   
   market$coefficient <- market$coefficient*(1+trend*market$sequence)
-  market$coefficient <- 1 + (market$coefficient-min(market$coefficient))/(max(market$coefficient)/min(market$coefficient))
+  market$coefficient <- (market$coefficient-min(market$coefficient))/(max(market$coefficient)-(min(market$coefficient)))
   market$market <- base_volume * market$coefficient
   market$market[market$market < 0] <- 0
   market$market <- sapply(market$market, wiggle, delta = randomness)
@@ -80,10 +81,10 @@ create_market <- function(start = Sys.Date(),
   
   market <- market %>%
     dplyr::mutate(working_day = as.numeric(market > 0)) %>%
-    dplyr::select(date, market, working_day) %>%
+    dplyr::select(date, market, weekday, working_day) %>%
     dplyr::mutate(actual = purrr::map_dbl(market, simulR::wiggle, delta = 0.2)) %>%
     dplyr::mutate(actual = round(actual,0)) %>%
-    dplyr::select(date, working_day, forecast = market, actual)
+    dplyr::select(date, weekday, working_day, forecast = market, actual)
   
   return(market)
 }

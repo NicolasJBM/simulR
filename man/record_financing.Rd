@@ -2,7 +2,7 @@
 % Please edit documentation in R/record_financing.R
 \name{record_financing}
 \alias{record_financing}
-\title{Write entries in the ledger related to investments.}
+\title{Write financing entries in the ledger.}
 \usage{
 record_financing(
   date = Sys.Date(),
@@ -36,5 +36,5 @@ record_financing(
 A tibble of journal entries.
 }
 \description{
-Write entries in the ledger related to investments.
+Write financing entries in the ledger.
 }

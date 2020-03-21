@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_period.R
 \name{create_period}
 \alias{create_period}
-\title{Write entries in the ledger related to investments.}
+\title{Create periods for the specified duration.}
 \usage{
 create_period(date)
 }
@@ -13,5 +13,5 @@ create_period(date)
 A tibble with different specifications of the period
 }
 \description{
-Write entries in the ledger related to investments.
+Create periods for the specified duration.
 }

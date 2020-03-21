@@ -2,14 +2,13 @@
 % Please edit documentation in R/create_case.R
 \name{create_case}
 \alias{create_case}
-\title{Functions generating cases for exercises}
+\title{Create a base market and a base profile for companies based on case selection criteria.}
 \usage{
 create_case(
   case = NA,
   number_cost_objects = 3,
   number_cost_pools = 3,
   number_materials = 5,
-  number_production_steps = 1,
   number_joint_products = 0,
   start_date = Sys.Date(),
   number_years = 5
@@ -24,8 +23,6 @@ create_case(
 
 \item{number_materials}{Integer. Number of different materials used.}
 
-\item{number_production_steps}{Integer. Number of sequential production steps.}
-
 \item{number_joint_products}{Integer. Number of products which are joint.}
 
 \item{start_date}{Date. At which date the first balance sheet is initialized.}
@@ -34,9 +31,9 @@ create_case(
 }
 \value{
 list of sublists necessary information for simulation and documentation:
-\item{base_market}{parameters about the environment, chart of accounts and market in the case.}
-\item{company}{parameters about the company, its capacity, activity, costing system, inventories and beginning of journal.}
+\item{base_market}{parameters about the environment, chart of accounts, resources and market in the case.}
+\item{base_company}{parameters about the company, its capacity, technology and underlying costing system, beginning of journal and censuses of various resources.}
 }
 \description{
-Functions generating cases for exercises
+Create a base market and a base profile for companies based on case selection criteria.
 }

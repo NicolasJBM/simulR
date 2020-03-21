@@ -1,4 +1,4 @@
-#' Write entries in the ledger related to purchases.
+#' Write purchase entries in the ledger.
 #' @param date        Date. date of the sale.
 #' @param object      Character. Name of the product or service sold.
 #' @param quantity    Integer. Volume sold.
@@ -23,17 +23,17 @@
 #' @export
 
 
-record_purchases <- function(date = Sys.Date(),
-                             object = "units",
-                             quantity = 100,
-                             price = 10,
-                             discount = 0.05,
-                             vat = 0.2,
-                             dpo = 45,
-                             risk = 0.1,
-                             lifetime = 1,
-                             nature = 21000,
-                             destination = 13300){
+record_purchase <- function(date = Sys.Date(),
+                            object = "units",
+                            quantity = 100,
+                            price = 10,
+                            discount = 0.05,
+                            vat = 0.2,
+                            dpo = 45,
+                            risk = 0.1,
+                            lifetime = 1,
+                            nature = 21000,
+                            destination = 13300){
   
   acc_cash <- 10100
   acc_vatx <- 24100

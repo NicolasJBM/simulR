@@ -13,9 +13,14 @@
 #'   \item input_unit: unit of the resource consumed.
 #'   \item input: kind of resource consumed.
 #'   \item per_unit: quantity of input per unit or output.
+#'   \item nature: account number from which the resource comes.
+#'   \item nature_label: label of the account from which the resource comes.
+#'   \item destination: account number to which the resource goes.
+#'   \item destination_label: label of the account to which the resource goes.
+#'   \item costing: whether the corresponding costs are subject to "tracing", "accumulation" or "allocation".
 #' }
 #' @docType data
 #' @keywords datasets
-#' @name case_activity
-#' @usage data("case_activity")
-"case_activity"
+#' @name case_technology
+#' @usage data("case_technology")
+"case_technology"

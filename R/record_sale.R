@@ -1,5 +1,5 @@
-#' Write entries in the ledger related to sales.
-#' @param date             Date. date of the sale.
+#' Write sales entries in the journal.
+#' @param date              Date. date of the sale.
 #' @param object            Character. Name of the product or service sold.
 #' @param quantity          Integer. Volume sold.
 #' @param price             Double. Base price of the product or service.
@@ -27,20 +27,20 @@
 
 
 
-record_sales <- function(date = Sys.Date(),
-                         object = "units",
-                         quantity = 100,
-                         price = 10,
-                         discount = 0.05,
-                         vat = 0.2,
-                         dso = 30,
-                         unit_cost = 5,
-                         sales_commission = 0.1,
-                         labor_tax = 0.5,
-                         dco = 15,
-                         account_increment = 0,
-                         situation = NULL,
-                         risk = 0.1){
+record_sale <- function(date = Sys.Date(),
+                        object = "units",
+                        quantity = 100,
+                        price = 10,
+                        discount = 0.05,
+                        vat = 0.2,
+                        dso = 30,
+                        unit_cost = 5,
+                        sales_commission = 0.1,
+                        labor_tax = 0.5,
+                        dco = 15,
+                        account_increment = 0,
+                        situation = NULL,
+                        risk = 0.1){
   
   entries <- list()
   

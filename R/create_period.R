@@ -1,4 +1,4 @@
-#' Write entries in the ledger related to investments.
+#' Create periods for the specified duration.
 #' @param date Date. date of the sale.
 #' @return A tibble with different specifications of the period
 #' @importFrom lubridate as_date

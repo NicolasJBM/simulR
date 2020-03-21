@@ -1,4 +1,4 @@
-#' Write entries in the ledger related to investments.
+#' Write investment entries in the ledger.
 #' @param date        Date. date of the sale.
 #' @param object      Character. Name of the product or service sold.
 #' @param price       Double. Base price of the product or service.
@@ -20,13 +20,13 @@
 #' @export
 
 
-record_assets <- function(date = Sys.Date(),
-                          object = "asset",
-                          price = 120000,
-                          rate = NA,
-                          lifetime = 60,
-                          nature = 15300,
-                          destination = 92000){
+record_investment <- function(date = Sys.Date(),
+                              object = "asset",
+                              price = 120000,
+                              rate = NA,
+                              lifetime = 60,
+                              nature = 15300,
+                              destination = 92000){
   
   
   acc_opcash <- 10100

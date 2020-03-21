@@ -1,4 +1,4 @@
-#' Write entries in the ledger related to investments.
+#' Write financing entries in the ledger.
 #' @param date        Date. date of the sale.
 #' @param object      Character. Name of the product or service sold.
 #' @param quantity    Integer. Quantity emitted.

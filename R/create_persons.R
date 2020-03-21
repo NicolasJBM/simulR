@@ -1,4 +1,4 @@
-#' Prepare figures for small exercises about the high-low method of cost estimation.
+#' Create people for cases and exercises.
 #' @param headcount Numeric. Number of persons to generate.
 #' @return A dataframe with gender, ethnicity, first_name, last_name, pronoun, possessive and title.
 #' @importFrom randomNames randomNames

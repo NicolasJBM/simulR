@@ -27,7 +27,7 @@ create_market(
 \item{seasons}{Tibble. "week", "weekday" and "coefficient" indicating the distribution.}
 }
 \value{
-A tibble with the market size for eachh period.
+A tibble with the market size (forcast and actual) for each period.
 }
 \description{
 Simulate a base market over several periods based on a set of assumptions.
