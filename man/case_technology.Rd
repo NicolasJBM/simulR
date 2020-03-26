@@ -7,21 +7,20 @@
 \format{Resources consumed by each product.
 \itemize{
 \item case: id of the case.
-\item activity: name of the activity.
-\item step: order in which activities unfold.
-\item phase: whether resources are consumed for "sales", "prroduction", or "support".
-\item output_standard_quantity: quantity produced.
-\item output_unit: unit of the quantity produced.
-\item output: kind of output produced.
+\item purpose: whether resources are consumed for "selling", "production", or "support".
 \item input_standard_quantity: quantity of resource consumed to make this quantity of that output.
 \item input_unit: unit of the resource consumed.
-\item input: kind of resource consumed.
-\item per_unit: quantity of input per unit or output.
-\item nature: account number from which the resource comes.
-\item nature_label: label of the account from which the resource comes.
-\item destination: account number to which the resource goes.
-\item destination_label: label of the account to which the resource goes.
-\item costing: whether the corresponding costs are subject to "tracing", "accumulation" or "allocation".
+\item input: account number from which the resource comes.
+\item input_label: label of the account from which the resource comes.
+\item output_standard_quantity: quantity produced.
+\item output_unit: unit of the quantity produced.
+\item output: account number to which the resource goes.
+\item output_label: label of the account to which the resource goes.
+\item costing: whether the link between cost pools relates to tracing, accumulation or allocation.
+\item from_pool: where the corresponding costs are first accumulated.
+\item from_pool_label: where the corresponding costs are first accumulated.
+\item to_pool: where the corresponding costs are then sent.
+\item to_pool_label:  where the corresponding costs are then sent.
 }}
 \usage{
 data("case_technology")

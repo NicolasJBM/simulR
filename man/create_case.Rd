@@ -31,8 +31,8 @@ create_case(
 }
 \value{
 list of sublists necessary information for simulation and documentation:
-\item{base_market}{parameters about the environment, chart of accounts, resources and market in the case.}
-\item{base_company}{parameters about the company, its capacity, technology and underlying costing system, beginning of journal and censuses of various resources.}
+\item{base_market}{parameters about the environment, chart of accounts and market in the case.}
+\item{base_company}{parameters about the company, its capacity, technology, beginning of journal and censuses of various resources.}
 }
 \description{
 Create a base market and a base profile for companies based on case selection criteria.

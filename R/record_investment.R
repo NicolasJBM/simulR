@@ -3,8 +3,8 @@
 #' @param object      Character. Name of the product or service sold.
 #' @param price       Double. Base price of the product or service.
 #' @param rate        Double. Interest rate used for the operating lease.
-#' @param lifetime    Integer. Number of periods (months).
-#' @param nature      Character. Account where the asset is "stored".
+#' @param duration    Integer. Number of periods (months).
+#' @param origin      Character. Account where the asset is "stored".
 #' @param destination Character. Account where the asset depreciation is accumulated.
 #' @return A tibble of journal entries.
 #' @importFrom dplyr case_when
@@ -24,8 +24,8 @@ record_investment <- function(date = Sys.Date(),
                               object = "asset",
                               price = 120000,
                               rate = NA,
-                              lifetime = 60,
-                              nature = 15300,
+                              duration = 60,
+                              origin = 15300,
                               destination = 92000){
   
   
@@ -36,15 +36,15 @@ record_investment <- function(date = Sys.Date(),
   acc_leaseint  <- 66300
   
   type_asset <- dplyr::case_when(
-    nature < 15200 & nature >= 15100 ~ "land",
-    nature < 15300 & nature >= 15200 ~ "building",
-    nature < 15400 & nature >= 15300 ~ "equipment",
-    nature < 15500 & nature >= 15400 ~ "vehicles",
-    nature < 16000 & nature >= 15900 ~ "lease",
+    origin < 15200 & origin >= 15100 ~ "land",
+    origin < 15300 & origin >= 15200 ~ "building",
+    origin < 15400 & origin >= 15300 ~ "equipment",
+    origin < 15500 & origin >= 15400 ~ "vehicles",
+    origin < 16000 & origin >= 15900 ~ "lease",
     TRUE ~ "nonoperating"
   )
   
-  acc_depr <- as.numeric(stringr::str_replace(nature, "^15", "16"))
+  acc_depr <- as.numeric(stringr::str_replace(origin, "^15", "16"))
   
   entries <- list()
   
@@ -54,7 +54,7 @@ record_investment <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,2),
       label = rep(paste0("purchase of ", object),2),
-      account = c(nature, acc_invcash),
+      account = c(origin, acc_invcash),
       debit = c(price,NA),
       credit = c(NA,price)
     )
@@ -64,7 +64,7 @@ record_investment <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,2),
       label = rep(paste0("operating lease of ", object),2),
-      account = c(nature, acc_leaseliab),
+      account = c(origin, acc_leaseliab),
       debit = c(price,NA),
       credit = c(NA,price)
     )
@@ -75,12 +75,12 @@ record_investment <- function(date = Sys.Date(),
     label_payment <- paste0("payment for ", object)
     date_depr <- date
     
-    for (i in 1:lifetime){
+    for (i in 1:duration){
       
       lubridate::day(date_depr) <- 1
       lubridate::month(date_depr) <- lubridate::month(date_depr) + 1
       lubridate::day(date_depr) <- lubridate::days_in_month(date_depr)
-      simfin <- FinancialMath::amort.period(Loan=price,n=lifetime,i=rate/12, t=i)
+      simfin <- FinancialMath::amort.period(Loan=price,n=duration,i=rate/12, t=i)
       payment <- simfin[2]
       interest <- simfin[6]
       reimburs <- simfin[7]
@@ -99,16 +99,16 @@ record_investment <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,2),
       label = rep(paste0("purchase of ", object),2),
-      account = c(nature, acc_invcash),
+      account = c(origin, acc_invcash),
       debit = c(price, NA),
       credit = c(NA, price)
     )
     
-    depreciation <- (price) / lifetime
+    depreciation <- (price) / duration
     label_depr <- paste0("depreciation of ", object)
     date_depr <- date
     
-    for (i in 1:lifetime){
+    for (i in 1:duration){
       
       lubridate::day(date_depr) <- 1
       lubridate::month(date_depr) <- lubridate::month(date_depr) + 1

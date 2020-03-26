@@ -10,9 +10,10 @@
 #' @param sales_commission  Double. Percentage of price paid to sales people as commission (end of month).
 #' @param labor_tax         Double. Percentage of labor taxes applied to the commissions.
 #' @param dco               Integer. Delay before paying commissions.
-#' @param account_increment Integer. Last two digits of an account number indicating the destination.
 #' @param situation         Character. NULL or specify one of the following situation: "default", "sales return", "pay very late" or "pay late" 
 #' @param risk              Double. Number between 0 and 1 indicating the risk on the sale, affecting the probability of different situations.
+#' @param origin            Integer. account number for the affected revenue account.
+#' @param intercompany      Logical. Whether the sale is to a division of the same company.
 #' @return A tibble of journal entries.
 #' @importFrom dplyr case_when
 #' @importFrom tibble tibble
@@ -38,15 +39,17 @@ record_sale <- function(date = Sys.Date(),
                         sales_commission = 0.1,
                         labor_tax = 0.5,
                         dco = 15,
-                        account_increment = 0,
                         situation = NULL,
-                        risk = 0.1){
+                        risk = 0.1,
+                        origin = 40000,
+                        intercompany = FALSE){
   
   entries <- list()
   
+  account_increment <- as.numeric(substr(origin, 4,5))
   
   acc_cash <- 10100
-  acc_rece <- 12000
+  acc_rece <- 12000 + as.numeric(intercompany) * 100
   acc_dbtf <- 12500
   acc_inve <- 13100 + account_increment
   

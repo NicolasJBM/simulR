@@ -1,15 +1,15 @@
 #' Write purchase entries in the ledger.
 #' @param date        Date. date of the sale.
-#' @param object      Character. Name of the product or service sold.
-#' @param quantity    Integer. Volume sold.
-#' @param price       Double. Base price of the product or service.
-#' @param discount    Double. Percentage of price reduction earned if payment within terms.
-#' @param vat         Double. Percentage of price to compute value added taxes.
-#' @param dpo         Integer. Day-Payable-Outstading or customer credit.
-#' @param risk        Double. Probability of not paying on time.
-#' @param lifetime    Integer. For how many periods does the right hold.
-#' @param nature      Character. Account where the asset is "stored".
-#' @param destination Character. Account where the asset depreciation is accumulated.
+#' @param object       Character. Name of the product or service sold.
+#' @param quantity     Integer. Volume sold.
+#' @param price        Double. Base price of the product or service.
+#' @param discount     Double. Percentage of price reduction earned if payment within terms.
+#' @param vat          Double. Percentage of price to compute value added taxes.
+#' @param dpo          Integer. Day-Payable-Outstading or customer credit.
+#' @param risk         Double. Probability of not paying on time.
+#' @param duration     Integer. For how many periods does the right hold.
+#' @param origin       Character. From where the purchase is made.
+#' @param destination  Character. Where the purchase goes.
 #' @return A tibble of journal entries.
 #' @importFrom dplyr case_when
 #' @importFrom tibble tibble
@@ -31,8 +31,8 @@ record_purchase <- function(date = Sys.Date(),
                             vat = 0.2,
                             dpo = 45,
                             risk = 0.1,
-                            lifetime = 1,
-                            nature = 21000,
+                            duration = 1,
+                            origin = 21000,
                             destination = 13300){
   
   acc_cash <- 10100
@@ -41,7 +41,7 @@ record_purchase <- function(date = Sys.Date(),
   
   
   type_purchase <- dplyr::case_when(
-    nature < 15000 ~ "prepaid",
+    origin < 15000 ~ "prepaid",
     TRUE ~ "due"
   )
   
@@ -52,7 +52,7 @@ record_purchase <- function(date = Sys.Date(),
     
     date_recept <- date
     lubridate::day(date_recept) <- 1
-    lubridate::month(date_recept) <- lubridate::month(date_recept) + lifetime
+    lubridate::month(date_recept) <- lubridate::month(date_recept) + duration
     lubridate::day(date_recept) <- lubridate::days_in_month(date_recept)
     
     label_pay <- paste0("payment in advance for ", object)
@@ -64,7 +64,7 @@ record_purchase <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = c(rep(date,3),rep(date_recept, 2)),
       label = c(rep(label_pay,3),rep(label_use, 2)),
-      account = c(nature, acc_vatx, acc_cash, destination, nature),
+      account = c(origin, acc_vatx, acc_cash, destination, origin),
       debit = c(price,va_tax,NA,price,NA),
       credit = c(NA,NA,payment,NA,price)
     )
@@ -79,7 +79,7 @@ record_purchase <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,3),
       label = rep(label_purch,3),
-      account = c(destination,acc_vatx,nature),
+      account = c(destination,acc_vatx,origin),
       debit = c(purchase,vat_amount,NA),
       credit = c(NA,NA,payable)
     )
@@ -97,7 +97,7 @@ record_purchase <- function(date = Sys.Date(),
       entries[[2]] <- tibble::tibble(
         date = rep(date+dpo+lateness,2),
         label = rep(label_cashout,2),
-        account = c(nature, acc_cash),
+        account = c(origin, acc_cash),
         debit = c(payable,NA),
         credit = c(NA,payable)
       )
@@ -112,7 +112,7 @@ record_purchase <- function(date = Sys.Date(),
       entries[[2]] <- tibble::tibble(
         date = rep(date+dpo-earliness,4),
         label = rep(label_cashout,4),
-        account = c(nature,acc_cash,acc_adj,acc_vatx),
+        account = c(origin,acc_cash,acc_adj,acc_vatx),
         debit = c(payable,NA,NA,NA),
         credit = c(NA,payment,cancel_purch,cancel_vat)
       )

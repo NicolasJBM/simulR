@@ -13,8 +13,8 @@ record_purchase(
   vat = 0.2,
   dpo = 45,
   risk = 0.1,
-  lifetime = 1,
-  nature = 21000,
+  duration = 1,
+  origin = 21000,
   destination = 13300
 )
 }
@@ -35,11 +35,11 @@ record_purchase(
 
 \item{risk}{Double. Probability of not paying on time.}
 
-\item{lifetime}{Integer. For how many periods does the right hold.}
+\item{duration}{Integer. For how many periods does the right hold.}
 
-\item{nature}{Character. Account where the asset is "stored".}
+\item{origin}{Character. From where the purchase is made.}
 
-\item{destination}{Character. Account where the asset depreciation is accumulated.}
+\item{destination}{Character. Where the purchase goes.}
 }
 \value{
 A tibble of journal entries.

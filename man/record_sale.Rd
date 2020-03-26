@@ -16,9 +16,10 @@ record_sale(
   sales_commission = 0.1,
   labor_tax = 0.5,
   dco = 15,
-  account_increment = 0,
   situation = NULL,
-  risk = 0.1
+  risk = 0.1,
+  origin = 40000,
+  intercompany = FALSE
 )
 }
 \arguments{
@@ -44,11 +45,13 @@ record_sale(
 
 \item{dco}{Integer. Delay before paying commissions.}
 
-\item{account_increment}{Integer. Last two digits of an account number indicating the destination.}
-
 \item{situation}{Character. NULL or specify one of the following situation: "default", "sales return", "pay very late" or "pay late"}
 
 \item{risk}{Double. Number between 0 and 1 indicating the risk on the sale, affecting the probability of different situations.}
+
+\item{origin}{Integer. account number for the affected revenue account.}
+
+\item{intercompany}{Logical. Whether the sale is to a division of the same company.}
 }
 \value{
 A tibble of journal entries.
