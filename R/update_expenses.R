@@ -103,8 +103,8 @@ update_expenses <- function(competition,
       dplyr::bind_rows()
     
     materials <- materials %>%
-      dplyr::mutate(company = names(competition)[[1]], date = start_date, value = quantity * price) %>%
-      dplyr::select(company, date, account = destination, quantity, value)
+      dplyr::mutate(date = start_date, value = quantity * price) %>%
+      dplyr::select(date, account = destination, quantity, value)
     
     
     company$census$raw_materials <- company$census$raw_materials %>%

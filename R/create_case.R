@@ -136,6 +136,10 @@ create_case <- function(case = NA,
     dplyr::filter(case == case) %>%
     dplyr::select(-case)
   
+  base_costing <- simulR::case_costing %>%
+    dplyr::filter(case == case) %>%
+    dplyr::select(-case)
+  
   market <- simulR::create_market(start = start_date,
                                   years = number_years,
                                   base_volume = environments$base_volume,
@@ -301,6 +305,20 @@ create_case <- function(case = NA,
   census$equity <- equity
   
   
+  
+  ###################################################################################################
+  
+  
+  
+  costing <- list()
+  costing$base_costing <- base_costing
+  costing$accumulation <- NA
+  costing$prepare_allocation <- NA
+  costing$allocation_rates <- NA
+  costing$assignment_table <- NA
+  
+  
+  
   ###################################################################################################
   
   base_market <- list()
@@ -322,6 +340,7 @@ create_case <- function(case = NA,
     attractiveness = 0, demand = 0)
   base_company$activity <- tibble::tibble(company = "", period = "", purpose = "", input = 0, output = 0, quantity = 0, unit = "")
   base_company$census <- census
+  base_company$costing <- costing
   
   rm(capacity, technology, journal, census)
   

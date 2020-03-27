@@ -37,7 +37,7 @@ record_purchase <- function(date = Sys.Date(),
   
   acc_cash <- 10100
   acc_vatx <- 24100
-  acc_adj <- 58000
+  acc_adj <- 58100
   
   
   type_purchase <- dplyr::case_when(
