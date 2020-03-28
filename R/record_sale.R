@@ -46,6 +46,10 @@ record_sale <- function(date = Sys.Date(),
   
   entries <- list()
   
+  discount <- (1-as.numeric(intercompany)) * discount
+  sales_commission <- (1-as.numeric(intercompany)) * sales_commission
+  risk <- (1-as.numeric(intercompany)) * risk
+  
   account_increment <- as.numeric(substr(origin, 4,5))
   
   acc_cash <- 10100
@@ -53,16 +57,16 @@ record_sale <- function(date = Sys.Date(),
   acc_dbtf <- 12500
   acc_inve <- 13100 + account_increment
   
-  acc_comm <- 22200
+  acc_comm <- 22200 + account_increment
   acc_vatx <- 24100
   acc_cctx <- 24200
   
-  acc_reve <- 40000 + account_increment
+  acc_reve <- 40000 + account_increment + as.numeric(intercompany) * 100
   acc_rtrn <- 49000 + account_increment
   acc_badd <- 49100 + account_increment
   acc_disc <- 49500 + account_increment
-  acc_cogs <- 50100 + account_increment
-  acc_sell <- 61000 + account_increment
+  acc_cogs <- 50000 + account_increment
+  acc_sell <- 61200 + account_increment
   acc_disp <- 71000
   
   

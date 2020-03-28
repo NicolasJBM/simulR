@@ -16,8 +16,8 @@ record_pool_reset <- function(date, object, amount, origin, destination){
     destination <- origin
     origin <- altorigin
     amount = abs(amount)
-    specification <- " - under-application"
-  } else specification <- " - over-application"
+    specification <- " - over-application"
+  } else specification <- " - under-application"
   
   
   entries <- tibble::tibble(
