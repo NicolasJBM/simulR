@@ -1,5 +1,5 @@
 #' Update information about companies' journal and census based on operations
-#' @param competition List. competitors as returned by the function make_competition.
+#' @param competition List. competitors as returned by the function update_activity.
 #' @param simperiod   Character. ID of the period for which the profile holds.
 #' @param simworkdays Integer. Number of working days in the period.
 #' @param base_market List. market based returned by the function create_case.
@@ -204,8 +204,8 @@ update_expenses <- function(competition,
       dplyr::mutate(value = quantity * price) %>%
       dplyr::group_by(origin) %>%
       dplyr::summarise(quantity = -sum(quantity, na.rm = TRUE), value = -sum(value, na.rm = TRUE)) %>%
-      dplyr::mutate(company = names(competition)[[1]], date = end_date) %>%
-      dplyr::select(company, date, account = origin, quantity, value)
+      dplyr::mutate(date = end_date) %>%
+      dplyr::select(date, account = origin, quantity, value)
     
     company$census$raw_materials <- company$census$raw_materials %>%
       dplyr::bind_rows(consumption)

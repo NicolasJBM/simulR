@@ -312,10 +312,14 @@ create_case <- function(case = NA,
   
   costing <- list()
   costing$base_costing <- base_costing
-  costing$accumulation <- NA
-  costing$prepare_allocation <- NA
-  costing$allocation_rates <- NA
-  costing$assignment_table <- NA
+  
+  costing$services_distribution <- tibble::tibble(company = "", period = "",
+                                                  from_pool = NA, from = "",
+                                                  to_pool = NA, to = "", quantity = NA,
+                                                  type = "", total_from = NA, proportion_from = NA, rank_from = NA, rank_to = NA)
+  
+  costing$allocation_rates <- tibble::tibble(company = "", period = "", costing = "", method = "", cost_pool = NA, accumulated = NA, allocated = NA, allocation = NA, allocation_base = NA, allocation_rate = NA)
+  costing$assignment_table <- tibble::tibble(company = "", period = "", step = "", from = NA)
   
   
   

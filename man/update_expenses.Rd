@@ -7,7 +7,7 @@
 update_expenses(competition, simperiod, simworkdays, base_market)
 }
 \arguments{
-\item{competition}{List. competitors as returned by the function make_competition.}
+\item{competition}{List. competitors as returned by the function update_activity.}
 
 \item{simperiod}{Character. ID of the period for which the profile holds.}
 

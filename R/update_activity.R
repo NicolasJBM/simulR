@@ -1,5 +1,5 @@
 #' Update information about companies' competitive profiles in competition. 
-#' @param competition List. competitors as returned by the function make_competition.
+#' @param competition List. competitors as returned by the function update_profile.
 #' @param simperiod   Character. ID of the period for which the profile holds.
 #' @param simworkdays Integer. Number of working days in the period.
 #' @importFrom dplyr %>%

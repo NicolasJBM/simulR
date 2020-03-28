@@ -9,6 +9,7 @@
 \item case: id of the case
 \item account: 5-digit account number. The first three digits indicate the nature, the last two the destination.
 \item account_label: case-specific label for the account.
+\item account_pool_object: cost pool or cost object or service to which the account is associated.
 \item account_generic: generic label for the account.
 \item account_subcategory: subcategory of the financial statements.
 \item account_category: category of the financial statements.

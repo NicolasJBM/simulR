@@ -7,7 +7,7 @@
 update_activity(competition, simperiod, simworkdays)
 }
 \arguments{
-\item{competition}{List. competitors as returned by the function make_competition.}
+\item{competition}{List. competitors as returned by the function update_profile.}
 
 \item{simperiod}{Character. ID of the period for which the profile holds.}
 
