@@ -35,7 +35,7 @@ update_closing <- function(competition, simperiod, base_market){
   keep <- NULL
   label <- NULL
   object <- NULL
-  
+  account_section <- NULL
   
   
   start_date <- simperiod %>%
@@ -70,6 +70,7 @@ update_closing <- function(competition, simperiod, base_market){
     if (income_tax > 0) {
       
       income_tax_entries <- tibble::tibble(
+        company = company,
         date = rep(end_date, 2),
         label = "closing - income tax",
         account = c(69000,24400),
@@ -80,6 +81,7 @@ update_closing <- function(competition, simperiod, base_market){
     } else {
       
       income_tax_entries <- tibble::tibble(
+        company = company,
         date = rep(end_date, 2),
         label = "closing - income tax credit",
         account = c(24400, 69000),
@@ -98,6 +100,7 @@ update_closing <- function(competition, simperiod, base_market){
     if (net_income < 0){
       
       net_income_entries <- tibble::tibble(
+        company = company,
         date = rep(end_date, 2),
         label = "closing - net income (loss)",
         account = c(39000,80000),
@@ -108,6 +111,7 @@ update_closing <- function(competition, simperiod, base_market){
     } else {
       
       net_income_entries <- tibble::tibble(
+        company = company,
         date = rep(end_date, 2),
         label = "closing - net income (gain)",
         account = c(80000,39000),
@@ -131,22 +135,25 @@ update_closing <- function(competition, simperiod, base_market){
         dplyr::filter(account >= 24000, account < 25000) %>%
         dplyr::group_by(account) %>%
         dplyr::summarise(debit = sum(debit, na.rm = TRUE), credit = sum(credit, na.rm = TRUE)) %>%
-        dplyr::mutate(date = end_date+10, amount = credit - debit, destination = 10100) %>%
+        dplyr::mutate(date = end_date+10, amount = credit - debit) %>%
         dplyr::left_join(dplyr::select(base_market$accounts, account, object = account_label), by = "account") %>%
-        dplyr::select(date, object, amount, origin = account, destination) %>%
+        dplyr::select(date, object, amount, origin = account) %>%
         dplyr::filter(amount > 0) %>%
         purrr::pmap(simulR::record_tax_payment) %>%
-        dplyr::bind_rows()
+        dplyr::bind_rows() %>%
+        dplyr::mutate(company = company) %>%
+        dplyr::select(company, dplyr::everything())
       
-      journal <- company_data$journal %>%
-        dplyr::bind_rows(tax_entries)
+      journal <- journal %>%
+       dplyr::bind_rows(tax_entries)
     }
     
     
     ################################################################################
     
-    company_data$journal <- journal %>%
+    journal <- journal %>%
       dplyr::mutate(
+        company = company,
         debit = round(debit, 2),
         credit = round(credit, 2)
       ) %>%
@@ -159,9 +166,67 @@ update_closing <- function(competition, simperiod, base_market){
         )
       ) %>%
       dplyr::filter(keep == TRUE) %>%
-      dplyr::select(date, label, account, debit, credit)
+      dplyr::select(company, date, label, account, debit, credit)
     
     
+    
+    ################################################################################
+    # Force balance end return
+    
+    prepgap <- journal %>%
+      dplyr::filter(date <= end_date) %>%
+      dplyr::left_join(base_market$accounts, by = "account") %>%
+      dplyr::filter(account_section %in% c("assets","liabilities or equity")) %>%
+      dplyr::group_by(account_section) %>%
+      dplyr::summarise(debit = sum(debit, na.rm = TRUE), credit = sum(credit, na.rm = TRUE)) %>%
+      dplyr::mutate(gap = dplyr::case_when(
+        account_section == "assets" ~ debit - credit,
+        TRUE ~ credit - debit
+      )) %>%
+      dplyr::arrange(account_section)
+    
+    gap <- prepgap$gap[[1]] - prepgap$gap[[2]]
+    
+    if (gap >= 0){
+      rounding_entries <- tibble::tibble(
+        company = company,
+        date = end_date,
+        label = "closing - correction for rounding",
+        account = 39900,
+        debit = NA,
+        credit = abs(gap)
+      )
+    } else {
+      rounding_entries <- tibble::tibble(
+        company = company,
+        date = end_date,
+        label = "closing - correction for rounding",
+        account = 39900,
+        debit = abs(gap),
+        credit = NA
+      )
+    }
+    
+    journal <- journal %>%
+      dplyr::bind_rows(rounding_entries) %>%
+      dplyr::mutate(
+        company = company,
+        debit = round(debit, 2),
+        credit = round(credit, 2)
+      ) %>%
+      dplyr::mutate(
+        keep = dplyr::case_when(
+          debit == 0 & is.na(credit) ~ FALSE,
+          is.na(debit) & credit == 0 ~ FALSE,
+          debit == 0 & credit == 0 ~ FALSE,
+          TRUE ~ TRUE
+        )
+      ) %>%
+      dplyr::filter(keep == TRUE) %>%
+      dplyr::select(company, date, label, account, debit, credit)
+    
+    
+    company_data$journal <- journal
     competition[[company]] <- company_data
   }
   

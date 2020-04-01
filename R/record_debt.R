@@ -29,8 +29,8 @@ record_debt <- function(date = Sys.Date(),
                              origin = 26400){
   
   
-  acc_opcash <- 10100
-  acc_fincash <- 10300
+  acc_opcash <- 10010
+  acc_fincash <- 10030
   acc_accruednote <- 23100
   acc_accruedmort <- 23200
   acc_accruedbond <- 23400

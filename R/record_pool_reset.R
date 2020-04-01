@@ -16,13 +16,12 @@ record_pool_reset <- function(date, object, amount, origin, destination){
     destination <- origin
     origin <- altorigin
     amount = abs(amount)
-    specification <- " - over-application"
-  } else specification <- " - under-application"
+  }
   
   
   entries <- tibble::tibble(
     date = rep(date, 2),
-    label = paste0(object, specification),
+    label = object,
     account =  c(destination, origin),
     debit = c(amount, NA),
     credit = c(NA, amount)

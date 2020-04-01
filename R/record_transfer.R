@@ -19,7 +19,7 @@
 
 
 
-record_consumption <- function(date = Sys.Date(),
+record_transfer <- function(date = Sys.Date(),
                                object = "materials",
                                quantity = 200,
                                price = 3,
@@ -28,7 +28,7 @@ record_consumption <- function(date = Sys.Date(),
   
   
   consumption <- price * quantity
-  label <- paste0("consumption of ", quantity, " of ", object)
+  label <- object
   
   entries <- list()
   

@@ -13,6 +13,8 @@
 \item standard_cost_reciprocal: allocation rate (using the reciprocal method) or standard cost associated with the cost pool or cost object (for standard costing).
 \item standard_cost_sequential: allocation rate (using the sequential method) or standard cost associated with the cost pool or cost object (for standard costing).
 \item standard_cost_direct: allocation rate (using the direct method) or standard cost associated with the cost pool or cost object (for standard costing).
+\item type_costing: whether the company uses "actual", "normal" or "standard" costing.
+\item allocation_method: whether the company uses the "direct", "sequential" or "reciprocal" method of allocation.
 }}
 \usage{
 data("case_costing")

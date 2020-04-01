@@ -28,7 +28,7 @@ record_salary <- function(date = Sys.Date(),
                           destination = 61200){
   
   
-  acc_opcash <- 10100
+  acc_opcash <- 10010
   acc_tax <- 24200
   
   wages <- price * quantity

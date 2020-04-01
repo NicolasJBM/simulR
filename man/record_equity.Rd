@@ -11,7 +11,7 @@ record_equity(
   price = 100,
   par = 100,
   origin = 31100,
-  destination = 10300
+  destination = 10030
 )
 }
 \arguments{

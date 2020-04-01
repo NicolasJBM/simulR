@@ -6,7 +6,7 @@
 \usage{
 create_market(
   start = Sys.Date(),
-  years = 5,
+  number_months = 60,
   base_volume = 1000,
   trend = 1/20000,
   randomness = 0.1,
@@ -16,7 +16,7 @@ create_market(
 \arguments{
 \item{start}{Character or date. When the the time series should start.}
 
-\item{years}{Integer. How many years should the time series last.}
+\item{number_months}{Integer. How many months should the time series last.}
 
 \item{base_volume}{Integer. Set magnitude for average daily firm demand.}
 

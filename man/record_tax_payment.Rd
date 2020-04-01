@@ -4,7 +4,7 @@
 \alias{record_tax_payment}
 \title{Write tax payment entries in the ledger.}
 \usage{
-record_tax_payment(date, object, amount, origin, destination)
+record_tax_payment(date, object, amount, origin)
 }
 \arguments{
 \item{date}{Date. date of the consumption.}
@@ -14,8 +14,6 @@ record_tax_payment(date, object, amount, origin, destination)
 \item{amount}{Double. Amount due to the State.}
 
 \item{origin}{Character. From where the consumption is made.}
-
-\item{destination}{Character. Where the consumption goes.}
 }
 \value{
 A tibble of journal entries.

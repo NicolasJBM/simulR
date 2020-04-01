@@ -52,7 +52,7 @@ record_sale <- function(date = Sys.Date(),
   
   account_increment <- as.numeric(substr(origin, 4,5))
   
-  acc_cash <- 10100
+  acc_opcash <- 10010
   acc_rece <- 12000 + as.numeric(intercompany) * 100
   acc_dbtf <- 12500
   acc_inve <- 13100 + account_increment
@@ -67,7 +67,7 @@ record_sale <- function(date = Sys.Date(),
   acc_disc <- 49500 + account_increment
   acc_cogs <- 50000 + account_increment
   acc_sell <- 61200 + account_increment
-  acc_disp <- 71000
+  acc_disp <- 58900
   
   
   label_sale <- paste0("sale of ", quantity, " ", object)
@@ -114,7 +114,7 @@ record_sale <- function(date = Sys.Date(),
   entries[[4]] <- tibble::tibble(
     date = rep(date_com,2),
     label = rep(label_paycom,2),
-    account = c(acc_comm,acc_cash),
+    account = c(acc_comm,acc_opcash),
     debit = c(commission,NA),
     credit = c(NA,commission)
   )
@@ -189,7 +189,7 @@ record_sale <- function(date = Sys.Date(),
     entries[[7]] <- tibble::tibble(
       date = rep(date+dso-earliness,4),
       label = rep(label_cashin,4),
-      account = c(acc_cash,acc_disc,acc_vatx,acc_rece),
+      account = c(acc_opcash,acc_disc,acc_vatx,acc_rece),
       debit = c(new_receipt, cancel_new_rev, cancel_new_vat,NA),
       credit = c(NA,NA,NA,new_receivable)
     )
@@ -209,7 +209,7 @@ record_sale <- function(date = Sys.Date(),
     entries[[6]] <- tibble::tibble(
       date = rep(date+dso+lateness,2),
       label = rep(label_cashin,2),
-      account = c(acc_cash,acc_dbtf),
+      account = c(acc_opcash,acc_dbtf),
       debit = c(receivable,NA),
       credit = c(NA,receivable)
     )
@@ -221,7 +221,7 @@ record_sale <- function(date = Sys.Date(),
     entries[[5]] <- tibble::tibble(
       date = rep(date+dso+lateness,2),
       label = rep(label_cashin,2),
-      account = c(acc_cash,acc_rece),
+      account = c(acc_opcash,acc_rece),
       debit = c(receivable,NA),
       credit = c(NA,receivable)
     )
@@ -236,7 +236,7 @@ record_sale <- function(date = Sys.Date(),
     entries[[5]] <- tibble::tibble(
       date = rep(date+dso-earliness,4),
       label = rep(label_cashin,4),
-      account = c(acc_cash,acc_disc,acc_vatx,acc_rece),
+      account = c(acc_opcash,acc_disc,acc_vatx,acc_rece),
       debit = c(receipt, cancel_rev, cancel_vat,NA),
       credit = c(NA,NA,NA,receivable)
     )

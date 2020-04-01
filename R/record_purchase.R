@@ -35,7 +35,7 @@ record_purchase <- function(date = Sys.Date(),
                             origin = 21000,
                             destination = 13300){
   
-  acc_cash <- 10100
+  acc_cash <- 10010
   acc_vatx <- 24100
   acc_adj <- 58100
   

@@ -66,7 +66,12 @@ update_activity <- function(competition, simperiod, simworkdays){
   unit <- NULL
   units_in_production <- NULL
   value <- NULL
-  
+  produced <- NULL
+  purchased <- NULL
+  sold <- NULL
+  unused <- NULL
+  tmp_sales <- NULL
+  units_available <- NULL
   
   
   for (company in names(competition)){
@@ -103,6 +108,7 @@ update_activity <- function(competition, simperiod, simworkdays){
       dplyr::select(origin, destination, nature, purpose, quantity, variability) %>%
       dplyr::mutate(account = dplyr::case_when(
         nature == "materials" ~ destination,
+        nature == "services" & purpose == "selling" ~ destination,
         TRUE ~ origin
       )) %>%
       dplyr::group_by(account) %>%
@@ -119,7 +125,7 @@ update_activity <- function(competition, simperiod, simworkdays){
       dplyr::filter(nature == "employment") %>%
       dplyr::select(account = origin, parameter, value) %>%
       tidyr::pivot_wider(names_from = c("parameter"), values_from = "value") %>%
-      dplyr::mutate(available =  quantity * capacity * simworkdays) %>%
+      dplyr::mutate(available = quantity * capacity * simworkdays) %>%
       dplyr::mutate(
         minimum = available * (1-variability),
         maximum = available * (1+variability),
@@ -172,7 +178,7 @@ update_activity <- function(competition, simperiod, simworkdays){
       dplyr::left_join(dplyr::select(resources_available, account, beginning), by = "account") %>%
       dplyr::mutate(needed = purrr::map2_dbl(demand, plan, max)) %>%
       dplyr::mutate(production_needed = needed - beginning) %>%
-      dplyr::select(account, priority, demand, production_needed) %>%
+      dplyr::select(account, priority, demand, beginning, production_needed) %>%
       dplyr::arrange(priority) %>%
       dplyr::mutate(account = as.numeric(stringr::str_replace_all(account, "131", "910")))
     
@@ -184,7 +190,9 @@ update_activity <- function(competition, simperiod, simworkdays){
     units <- c()
     consumptions <- list()
     
-    for (product in schedules$account){
+    for (i in 1:nrow(schedules)){
+      
+      product <- schedules$account[[i]]
       
       # First, compte resources directly and indirectly consumed by every batch
       direct_batch_consumption <- technology %>%
@@ -210,7 +218,7 @@ update_activity <- function(competition, simperiod, simworkdays){
       
       
       # Select as number of matches the minimum of the needed and the possible
-      max_batches <- min(consumption_per_batch$possible_batches)
+      max_batches <- min(consumption_per_batch$possible_batches) - (nrow(schedules)-i)
       batch_size <- dplyr::filter(technology, output == product, purpose == "production") %>%
         dplyr::select(output_standard_quantity) %>%
         unlist() %>% mean()
@@ -241,7 +249,8 @@ update_activity <- function(competition, simperiod, simworkdays){
     schedules$batches_in_production <- batches
     schedules$units_in_production <- units
     schedules <- schedules %>%
-      dplyr::mutate(sales = purrr::map2_dbl(units_in_production, demand, min)) %>%
+      dplyr::mutate(units_available = beginning + units_in_production) %>%
+      dplyr::mutate(sales = purrr::map2_dbl(units_available, demand, min)) %>%
       dplyr::select(account, batches = batches_in_production, production = units_in_production, sales)
     
     rm(batches, product, units, consumptions)
@@ -250,7 +259,7 @@ update_activity <- function(competition, simperiod, simworkdays){
     activity <- split(technology, technology$purpose)
     
     activity$selling <- activity$selling %>%
-      dplyr::mutate(account = as.numeric(stringr::str_replace_all(output, "612", "910"))) %>%
+      dplyr::mutate(account = as.numeric(stringr::str_replace_all(output, "400", "910"))) %>%
       dplyr::left_join(select(schedules, account, quantity = sales), by = "account") %>%
       dplyr::mutate(consumption = quantity / output_standard_quantity * input_standard_quantity) %>%
       dplyr::select(purpose, input, output, quantity = consumption, unit = input_unit)
@@ -270,9 +279,35 @@ update_activity <- function(competition, simperiod, simworkdays){
       dplyr::mutate(consumption = quantity / output_standard_quantity * input_standard_quantity) %>%
       dplyr::select(purpose, input, output, quantity = consumption, unit = input_unit)
     
+    prepadmin1 <- activity$selling %>%
+      dplyr::filter(input %in% activity$administration$output) %>%
+      dplyr::group_by(input) %>%
+      dplyr::summarise(quantity = sum(quantity))
+    
+    prepadmin2 <- activity$production %>%
+      dplyr::filter(input %in% activity$administration$output) %>%
+      dplyr::group_by(input) %>%
+      dplyr::summarise(quantity = sum(quantity))
+    
+    prepadmin3 <- activity$support %>%
+      dplyr::filter(input %in% activity$administration$output) %>%
+      dplyr::group_by(input) %>%
+      dplyr::summarise(quantity = sum(quantity))
+    
+    prepadmin <- prepadmin1 %>%
+      dplyr::bind_rows(prepadmin2) %>%
+      dplyr::bind_rows(prepadmin3) %>%
+      dplyr::group_by(input) %>%
+      dplyr::summarise(quantity = sum(quantity))
+    
+    activity$administration <- activity$administration %>%
+      dplyr::left_join(select(prepadmin, output = input, quantity), by = "output") %>%
+      dplyr::mutate(consumption = quantity / output_standard_quantity * input_standard_quantity) %>%
+      dplyr::select(purpose, input, output, quantity = consumption, unit = input_unit)
+    
     activity <- dplyr::bind_rows(activity)
     
-    rm(prepsupport, technology)
+    rm(prepadmin, prepadmin1, prepadmin2, prepadmin3, prepsupport, technology)
     
     
     
@@ -288,9 +323,9 @@ update_activity <- function(competition, simperiod, simworkdays){
         TRUE ~ as.numeric(stringr::str_replace_all(input, "910", "131"))
       )) %>%
       dplyr::mutate(purpose = dplyr::case_when(
-        unit == "batches" ~ "production",
-        unit == "production" ~ "production",
-        TRUE ~ "selling"
+        unit == "batches" ~ "inventory",
+        unit == "production" ~ "inventory",
+        TRUE ~ "customer"
       )) %>%
       dplyr::mutate(unit = dplyr::case_when(
         unit == "batches" ~ "batch",
@@ -303,25 +338,35 @@ update_activity <- function(competition, simperiod, simworkdays){
     # ensure that purchases have to be linked to capacity accounts
     
     preppurch <- activity %>%
-      dplyr::mutate(destination = dplyr::case_when(
-        purpose == "selling" ~ output,
+      dplyr::mutate(account = dplyr::case_when(
+        purpose == "selling" & input >= 21000 & input < 22000 ~ as.numeric(stringr::str_replace_all(output, "400", "612")),
         TRUE ~ input
       )) %>%
-      dplyr::group_by(account = input, destination, unit) %>%
+      dplyr::group_by(account, unit) %>%
       dplyr::summarise(consumed = sum(quantity)) %>%
       dplyr::full_join(resources_available, by = "account") %>%
       tidyr::replace_na(list(consumed = 0)) %>%
       dplyr::mutate(quantity = purrr::map2_dbl(minimum, consumed, max)) %>%
-      dplyr::select(account, destination, quantity, unit) %>%
+      dplyr::select(account, quantity, unit) %>%
       dplyr::ungroup()
     
     shipments <- competition[[company]]$capacity %>%
       dplyr::filter(nature == "services", purpose == "selling") %>%
       dplyr::select(purpose, origin, destination) %>%
       unique() %>%
-      dplyr::mutate(account = origin, purpose = "purchases") %>%
-      dplyr::left_join(preppurch, by = c("account", "destination")) %>%
+      dplyr::mutate(account = destination, purpose = "purchases") %>%
+      dplyr::left_join(preppurch, by = c("account")) %>%
       dplyr::ungroup() %>%
+      dplyr::select(purpose, input = origin, output = destination, quantity, unit)
+    
+    salesemployment <- competition[[company]]$capacity %>%
+      dplyr::filter(nature == "employment", purpose == "selling") %>%
+      dplyr::select(nature, purpose, origin, destination) %>%
+      dplyr::mutate(account = origin, purpose = "purchases") %>%
+      unique() %>%
+      dplyr::left_join(preppurch, by = "account") %>%
+      dplyr::ungroup() %>%
+      unique() %>%
       dplyr::select(purpose, input = origin, output = destination, quantity, unit)
     
     purchases <- competition[[company]]$capacity %>%
@@ -332,25 +377,67 @@ update_activity <- function(competition, simperiod, simworkdays){
         TRUE ~ origin
       ), purpose = "purchases") %>%
       unique() %>%
-      dplyr::left_join(dplyr::select(preppurch, -destination), by = "account") %>%
+      dplyr::left_join(preppurch, by = "account") %>%
       dplyr::ungroup() %>%
       dplyr::select(purpose, input = origin, output = destination, quantity, unit)
-    
-    
-    rm(preppurch)
-    
-    
+
     activity <- activity %>%
       dplyr::bind_rows(schedules) %>%
       dplyr::bind_rows(shipments) %>%
+      dplyr::bind_rows(salesemployment) %>%
       dplyr::bind_rows(purchases) %>%
-      dplyr::mutate(company = company, period = simperiod) %>%
+      dplyr::mutate(company = company, period = simperiod, quantity = round(quantity,2)) %>%
       dplyr::select(company, period, dplyr::everything()) %>%
       unique()
     
-    competition[[company]]$activity <- unique(dplyr::filter(dplyr::bind_rows(competition[[company]]$activity, activity), period != ""))
+    rm(preppurch, shipments, salesemployment, purchases)
     
-    rm(schedules, shipments, purchases, activity)
+    
+    usage <- activity %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(unit != "batch") %>%
+      dplyr::mutate(output = as.numeric(stringr::str_replace_all(output, "400", "612"))) %>%
+      dplyr::mutate(purpose = dplyr::case_when(
+        purpose == "purchases" ~ "purchased",
+        purpose == "administration" ~ "consumed",
+        purpose == "support" ~ "consumed",
+        purpose == "production" ~ "consumed",
+        purpose == "selling" ~ "consumed",
+        purpose == "inventory" ~ "produced",
+        purpose == "customer" ~ "sold",
+        TRUE ~ "zzzz"
+      )) %>%
+      dplyr::mutate(account = dplyr::case_when(
+        input %in% resources_available$account ~ input,
+        TRUE ~ output
+      )) %>%
+      dplyr::group_by(company, period, account, purpose) %>%
+      dplyr::summarise(quantity = sum(quantity, na.rm = TRUE)) %>%
+      tidyr::pivot_wider(names_from = c("purpose"), values_from = "quantity", values_fill = list(quantity = 0)) %>%
+      dplyr::left_join(dplyr::select(resources_available, account, beginning), by = "account") %>%
+      dplyr::mutate(unused = beginning + produced + purchased - sold - consumed) %>%
+      dplyr::select(company, period, account, beginning, purchased, consumed, produced, sold, unused)
+    
+    
+    complete_profile <- schedules %>%
+      dplyr::filter(purpose == "customer") %>%
+      dplyr::mutate(
+        company = company,
+        period = simperiod,
+        account = as.numeric(stringr::str_replace_all(input, "131", "400"))) %>%
+      dplyr::select(company, period, account, tmp_sales = quantity) %>%
+      dplyr::full_join( competition[[company]]$profile, by = c("company","period","account")) %>%
+      dplyr::mutate(sales = dplyr::case_when(
+        is.na(sales) ~ tmp_sales,
+        TRUE ~ sales
+      )) %>%
+      dplyr::select(-tmp_sales)
+    
+    competition[[company]]$profile <- complete_profile
+    competition[[company]]$activity <- unique(dplyr::filter(dplyr::bind_rows(competition[[company]]$activity, activity), period != ""))
+    competition[[company]]$usage <- unique(dplyr::filter(dplyr::bind_rows(competition[[company]]$usage, usage), period != ""))
+    
+    rm(schedules, activity)
   }
   
   return(competition)

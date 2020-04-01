@@ -29,8 +29,8 @@ record_investment <- function(date = Sys.Date(),
                               destination = 92000){
   
   
-  acc_opcash <- 10100
-  acc_invcash <- 10200
+  acc_opcash <- 10010
+  acc_invcash <- 10020
   acc_accruedint <- 23300
   acc_leaseliab <- 26300
   acc_leaseint  <- 66300

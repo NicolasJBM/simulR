@@ -4,13 +4,7 @@
 \alias{update_production}
 \title{Update information about companies' journal and census based on operations.}
 \usage{
-update_production(
-  competition,
-  simperiod,
-  base_market,
-  type_costing = "actual",
-  allocation_method = "direct"
-)
+update_production(competition, simperiod, base_market)
 }
 \arguments{
 \item{competition}{List. competitors as returned by the function pdate_expenses.}
@@ -18,10 +12,6 @@ update_production(
 \item{simperiod}{Character. ID of the period for which the profile holds.}
 
 \item{base_market}{List. market based returned by the function create_case.}
-
-\item{type_costing}{Character. Whether the costing is "actual", "normal" or "standard".}
-
-\item{allocation_method}{Character. Whether the allocation method is "direct", "sequential" or "reciprocal".}
 }
 \value{
 Append updated journal and census to the competitors' parameters.

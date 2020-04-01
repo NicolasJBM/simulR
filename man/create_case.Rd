@@ -5,29 +5,20 @@
 \title{Create a base market and a base profile for companies based on case selection criteria.}
 \usage{
 create_case(
-  case = NA,
-  number_cost_objects = 3,
-  number_cost_pools = 3,
-  number_materials = 5,
-  number_joint_products = 0,
+  case = NULL,
   start_date = Sys.Date(),
-  number_years = 5
+  number_months = 12,
+  number_companies = 1
 )
 }
 \arguments{
-\item{case}{Character vector. Names of the case to select.}
-
-\item{number_cost_objects}{Integer. Number of different produts sold.}
-
-\item{number_cost_pools}{Integer. Number of different cost pools used.}
-
-\item{number_materials}{Integer. Number of different materials used.}
-
-\item{number_joint_products}{Integer. Number of products which are joint.}
+\item{case}{List. Tibbles about case information, environments, seasons, accounts, capacity, technology and costing.}
 
 \item{start_date}{Date. At which date the first balance sheet is initialized.}
 
-\item{number_years}{Integer. How many years should the time series last.}
+\item{number_months}{Integer. How many months should the time series last.}
+
+\item{number_companies}{Integer. How many companies should be created.}
 }
 \value{
 list of sublists necessary information for simulation and documentation:

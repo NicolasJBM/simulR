@@ -103,8 +103,8 @@ update_expenses <- function(competition,
       dplyr::bind_rows()
     
     materials <- materials %>%
-      dplyr::mutate(date = start_date, value = quantity * price) %>%
-      dplyr::select(date, account = destination, quantity, value)
+      dplyr::mutate(company = names(competition)[[i]], date = start_date, value = quantity * price) %>%
+      dplyr::select(company, date, account = destination, quantity, value)
     
     
     company$census$raw_materials <- company$census$raw_materials %>%
@@ -182,6 +182,7 @@ update_expenses <- function(competition,
       dplyr::select(origin = account, price)
     
     consumption <- company$activity %>%
+      dplyr::filter(period == simperiod) %>%
       dplyr::left_join(dplyr::select(company$technology, input, output, costing), by = c("input","output")) %>%
       dplyr::filter(costing == "tracing", input > 13300, input < 14000) %>%
       dplyr::select(origin = input, destination = output, quantity, unit) %>%
@@ -194,18 +195,18 @@ update_expenses <- function(competition,
       dplyr::mutate(unit = dplyr::case_when(quantity > 1 ~ paste0(unit, "s"), TRUE ~ unit)) %>%
       dplyr::mutate(
         date = end_date,
-        object = paste0(" ", unit, " of ", from_what, " for ", destination_label)
+        object = paste0("consumption of ", quantity, " ", unit, " of ", from_what, " for ", destination_label)
       ) %>%
       dplyr::select(date, object, quantity, price, origin, destination) %>%
-      purrr::pmap(simulR::record_consumption) %>%
+      purrr::pmap(simulR::record_transfer) %>%
       dplyr::bind_rows()
     
     consumption <- consumption %>%
       dplyr::mutate(value = quantity * price) %>%
       dplyr::group_by(origin) %>%
       dplyr::summarise(quantity = -sum(quantity, na.rm = TRUE), value = -sum(value, na.rm = TRUE)) %>%
-      dplyr::mutate(date = end_date) %>%
-      dplyr::select(date, account = origin, quantity, value)
+      dplyr::mutate(company = names(competition)[[i]], date = end_date) %>%
+      dplyr::select(company, date, account = origin, quantity, value)
     
     company$census$raw_materials <- company$census$raw_materials %>%
       dplyr::bind_rows(consumption)

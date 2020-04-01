@@ -11,8 +11,7 @@
 \item number_cost_pools: number of different cost pools used.
 \item number_materials: number of different kinds of raw materials used.
 \item number_joint_products: number of products which are joint.
-\item type_costing: whether the company uses "actual", "normal" or "standard" costing.
-\item allocation_method: whether the company uses the "direct", "sequential" or "reciprocal" method of allocation.
+\item company_names: 9 names of companies separated by "; ".
 }}
 \usage{
 data("case_information")

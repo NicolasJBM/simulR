@@ -9,6 +9,7 @@
 #'   \item account_generic: generic label for the account.
 #'   \item account_subcategory: subcategory of the financial statements.
 #'   \item account_category: category of the financial statements.
+#'   \item account_section: section of the financial statements.
 #'   \item account_statement: which financial statements.
 #' }
 #' @docType data

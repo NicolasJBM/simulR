@@ -26,15 +26,15 @@ record_equity <- function(date = Sys.Date(),
                           price = 100,
                           par = 100,
                           origin = 31100,
-                          destination = 10300){
+                          destination = 10030){
   
   
   type_fin <- dplyr::case_when(
-    origin < 31200 & origin >= 31100 & destination == 10300 ~ "common",
-    origin < 31300 & origin >= 31200 & destination == 10300 ~ "noncumulative",
-    origin < 31400 & origin >= 31300 & destination == 10300 ~ "cumulative",
-    origin < 31500 & origin >= 31400 & destination == 10300 ~ "treasuryout",
-    origin == 10300 & destination < 31500 & destination >= 31400 ~ "treasuryin",
+    origin < 31200 & origin >= 31100 & destination == 10030 ~ "common",
+    origin < 31300 & origin >= 31200 & destination == 10030 ~ "noncumulative",
+    origin < 31400 & origin >= 31300 & destination == 10030 ~ "cumulative",
+    origin < 31500 & origin >= 31400 & destination == 10030 ~ "treasuryout",
+    origin == 10030 & destination < 31500 & destination >= 31400 ~ "treasuryin",
     TRUE ~ "dividend"
   )
   
@@ -60,7 +60,7 @@ record_equity <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,3),
       label = c(rep(label,3)),
-      account = c(10300,38100,31100),
+      account = c(10030,38100,31100),
       debit = c(cash_amount,paidin_debit,NA),
       credit = c(NA,paidin_credit,stock_amount)
     )
@@ -84,7 +84,7 @@ record_equity <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,3),
       label = c(rep(label,3)),
-      account = c(10300,38200,31200),
+      account = c(10030,38200,31200),
       debit = c(cash_amount,paidin_debit,NA),
       credit = c(NA,paidin_credit,stock_amount)
     )
@@ -108,7 +108,7 @@ record_equity <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,3),
       label = c(rep(label,3)),
-      account = c(10300,38300,31300),
+      account = c(10030,38300,31300),
       debit = c(cash_amount,paidin_debit,NA),
       credit = c(NA,paidin_credit,stock_amount)
     )
@@ -123,7 +123,7 @@ record_equity <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,2),
       label = c(rep(label,2)),
-      account = c(10300,31400),
+      account = c(10030,31400),
       debit = c(amount,NA),
       credit = c(NA,amount)
     )
@@ -146,7 +146,7 @@ record_equity <- function(date = Sys.Date(),
     entries[[1]] <- tibble::tibble(
       date = rep(date,3),
       label = c(rep(label,3)),
-      account = c(31400,38400,10300),
+      account = c(31400,38400,10030),
       debit = c(stock_amount,paidin_debit,NA),
       credit = c(NA,paidin_credit,cash_amount)
     )
@@ -170,7 +170,7 @@ record_equity <- function(date = Sys.Date(),
     entries[[2]] <- tibble::tibble(
       date = rep(date_pay,2),
       label = c(rep(label_pay,2)),
-      account = c(destination,10300),
+      account = c(destination,10030),
       debit = c(dividend,NA),
       credit = c(NA,dividend)
     )

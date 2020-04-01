@@ -1,11 +1,8 @@
 #' Create a base market and a base profile for companies based on case selection criteria.
-#' @param case                  Character vector. Names of the case to select.
-#' @param number_cost_objects     Integer. Number of different produts sold.
-#' @param number_cost_pools       Integer. Number of different cost pools used.
-#' @param number_materials        Integer. Number of different materials used.
-#' @param number_joint_products   Integer. Number of products which are joint.
-#' @param start_date              Date. At which date the first balance sheet is initialized.
-#' @param number_years            Integer. How many years should the time series last.
+#' @param case             List. Tibbles about case information, environments, seasons, accounts, capacity, technology and costing.
+#' @param start_date       Date. At which date the first balance sheet is initialized.
+#' @param number_months    Integer. How many months should the time series last.
+#' @param number_companies Integer. How many companies should be created.
 #' @importFrom dplyr %>%
 #' @importFrom dplyr filter 
 #' @importFrom dplyr sample_n
@@ -17,6 +14,9 @@
 #' @importFrom dplyr arrange
 #' @importFrom purrr pmap
 #' @importFrom purrr map
+#' @importFrom lubridate is.Date
+#' @importFrom lubridate day
+#' @importFrom lubridate days_in_month
 #' @importFrom tidyr pivot_wider 
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr unnest
@@ -26,21 +26,18 @@
 #' @export
 
 
-create_case <- function(case = NA,
-                        number_cost_objects = 3,
-                        number_cost_pools = 3,
-                        number_materials = 5,
-                        number_joint_products = 0,
+create_case <- function(case = NULL,
                         start_date = Sys.Date(),
-                        number_years = 5){
+                        number_months = 12,
+                        number_companies = 1){
   
   
   stopifnot(
-    is.na(case) | case %in% simulR::case_information$case,
-    is.na(number_cost_objects) | is.numeric(number_cost_objects),
-    is.na(number_cost_pools) | is.numeric(number_cost_pools),
-    is.na(number_materials) | is.numeric(number_materials),
-    is.na(number_joint_products) | is.numeric(number_joint_products)
+    !is.null(case),
+    lubridate::is.Date(start_date),
+    is.numeric(number_months),
+    is.numeric(number_companies),
+    number_companies <= 9
   )
   
   # Bind variables
@@ -78,76 +75,51 @@ create_case <- function(case = NA,
   unit <- NULL
   value <- NULL
   vat <- NULL
+  actual <- NULL
+  forecast <- NULL
+  working_day <- NULL
   
+  
+  
+  lubridate::day(start_date) <- lubridate::days_in_month(start_date)
   
   
   ##################################################################################################
   # Select the case based on filters and create a market
-  
-  
-  if (is.na(case)){
-    case <- simulR::case_information
-    if (is.na(number_cost_objects)){
-      case <- case
-    } else {
-      case <- dplyr::filter(case, number_cost_objects == number_cost_objects)
-    }
-    if (is.na(number_cost_pools)){
-      case <- case
-    } else {
-      case <- dplyr::filter(case, number_cost_pools == number_cost_pools)
-    }
-    if (is.na(number_materials)){
-      case <- case
-    } else {
-      case <- dplyr::filter(case, number_materials == number_materials)
-    }
-    if (is.na(number_joint_products)){
-      case <- case
-    } else {
-      case <- dplyr::filter(case, number_joint_products == number_joint_products)
-    }
-  } else {
-    case <- dplyr::filter(simulR::case_information, case == case)
-  }
-  
-  case <- sample(case$case, 1)
-  
-  environments <- simulR::case_environments %>%
-    dplyr::filter(case == case) %>%
-    dplyr::sample_n(1) %>%
-    dplyr::select(-case)
-  
-  seasons <- simulR::case_seasons %>%
-    dplyr::filter(case == case) %>%
-    dplyr::select(-case) %>%
+  information <- case$information
+  environments <- case$environments
+  seasons <- case$seasons %>%
     tidyr::pivot_longer(cols = c("monday","tuesday","wednesday","thursday","friday","saturday","sunday"),
                         names_to = "weekday", values_to = "coefficient")
-  
-  accounts <- simulR::case_accounts %>%
-    dplyr::filter(case == case) %>%
-    dplyr::select(-case)
-  
-  capacity <- simulR::case_capacity %>%
-    dplyr::filter(case == case) %>%
-    dplyr::select(-case)
-  
-  technology <- simulR::case_technology %>%
-    dplyr::filter(case == case) %>%
-    dplyr::select(-case)
-  
-  base_costing <- simulR::case_costing %>%
-    dplyr::filter(case == case) %>%
-    dplyr::select(-case)
+  accounts <- case$accounts
+  capacity <- case$capacity
+  technology <- case$technology
+  base_costing <- case$costing
   
   market <- simulR::create_market(start = start_date,
-                                  years = number_years,
+                                  number_months = number_months,
                                   base_volume = environments$base_volume,
                                   seasons = seasons) %>%
     dplyr::mutate(date = purrr::map(date, simulR::create_period)) %>%
     tidyr::unnest(date)
   
+  
+  periodic_demand <- market %>%
+    dplyr::group_by(period) %>%
+    dplyr::summarise(working_day = sum(working_day), forecast = sum(forecast), actual = sum(actual))
+  periodic_demand <- periodic_demand[-1,]
+  
+  
   rm(seasons)
+  
+  
+  company_names <- information %>%
+    dplyr::select(company_names) %>%
+    unlist() %>%
+    strsplit("; ") %>%
+    unlist() %>%
+    sample(number_companies, replace = FALSE) %>%
+    as.character()
   
   
   ###################################################################################################
@@ -313,13 +285,12 @@ create_case <- function(case = NA,
   costing <- list()
   costing$base_costing <- base_costing
   
-  costing$services_distribution <- tibble::tibble(company = "", period = "",
-                                                  from_pool = NA, from = "",
+  costing$services_distribution <- tibble::tibble(period = "", from_pool = NA, from = "",
                                                   to_pool = NA, to = "", quantity = NA,
                                                   type = "", total_from = NA, proportion_from = NA, rank_from = NA, rank_to = NA)
   
-  costing$allocation_rates <- tibble::tibble(company = "", period = "", costing = "", method = "", cost_pool = NA, accumulated = NA, allocated = NA, allocation = NA, allocation_base = NA, allocation_rate = NA)
-  costing$assignment_table <- tibble::tibble(company = "", period = "", step = "", from = NA)
+  costing$allocation_rates <- tibble::tibble(period = "", costing = "", method = "", cost_pool = NA, accumulated = NA, allocated = NA, allocation = NA, allocation_base = NA, allocation_rate = NA)
+  costing$assignment_table <- tibble::tibble(period = "", step = "", from = NA)
   
   
   
@@ -329,6 +300,7 @@ create_case <- function(case = NA,
   base_market$environments <- environments
   base_market$accounts <- accounts
   base_market$market <- market
+  base_market$periodic_demand <- periodic_demand
   
   rm(environments, accounts)
   
@@ -341,16 +313,20 @@ create_case <- function(case = NA,
   base_company$profile <- tibble::tibble(
     period = "", account = 0,
     dso = 0, price = 0, discount = 0, commission = 0, advertising = 0, cost = 0,
-    attractiveness = 0, demand = 0)
+    attractiveness = 0, demand = 0, sales = 0)
   base_company$activity <- tibble::tibble(company = "", period = "", purpose = "", input = 0, output = 0, quantity = 0, unit = "")
+  base_company$usage <- tibble::tibble(company = "", period = "", account = 0, beginning = 0, purchased = 0, consumed = 0, produced = 0, sold = 0, unused = 0)
   base_company$census <- census
   base_company$costing <- costing
   
   rm(capacity, technology, journal, census)
   
+  competition <- simulR::create_competition(company_names = company_names, base_company = base_company)
+  
   results <- list()
   results$base_market <- base_market
-  results$base_company <- base_company
+  results$competition <- competition
+  
   
   return(results)
 }

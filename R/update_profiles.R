@@ -166,7 +166,7 @@ update_profiles <- function(competition, simperiod, simdemand, base_market){
   coefficient <- coefficient / sum(coefficient)
   coefficient <- ((1-sensitivity) + sensitivity * coefficient) / length(coefficient)
   
-  attractiveness$demand <- round(simdemand * length(profiles) * coefficient, 0)
+  attractiveness$demand <- round(1 + (simdemand * length(competition) * coefficient / 100), 0) * 100
   
   
   
@@ -174,7 +174,8 @@ update_profiles <- function(competition, simperiod, simdemand, base_market){
   
   
   profiles <- profiles %>%
-    dplyr::left_join(attractiveness, by = c("company","account"))
+    dplyr::left_join(attractiveness, by = c("company","account")) %>%
+    dplyr::mutate(sales = NA)
   
   profiles <- split(profiles, profiles$company)
   

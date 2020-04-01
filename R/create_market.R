@@ -1,10 +1,10 @@
 #' Simulate a base market over several periods based on a set of assumptions.
-#' @param start       Character or date. When the the time series should start.
-#' @param years       Integer. How many years should the time series last.
-#' @param base_volume Integer. Set magnitude for average daily firm demand.
-#' @param trend       Double. Linear trader across all periods.
-#' @param randomness  Double. Percentage of random variation for the demand.
-#' @param seasons     Tibble. "week", "weekday" and "coefficient" indicating the distribution.
+#' @param start         Character or date. When the the time series should start.
+#' @param number_months Integer. How many months should the time series last.
+#' @param base_volume   Integer. Set magnitude for average daily firm demand.
+#' @param trend         Double. Linear trader across all periods.
+#' @param randomness    Double. Percentage of random variation for the demand.
+#' @param seasons       Tibble. "week", "weekday" and "coefficient" indicating the distribution.
 #' @return A tibble with the market size (forcast and actual) for each period.
 #' @importFrom chron seq.dates
 #' @importFrom lubridate year
@@ -12,6 +12,7 @@
 #' @importFrom lubridate week
 #' @importFrom lubridate day
 #' @importFrom lubridate mdy
+#' @importFrom lubridate %m+%
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr left_join
 #' @importFrom dplyr group_by
@@ -27,14 +28,14 @@
 
 
 create_market <- function(start = Sys.Date(),
-                          years = 5,
+                          number_months = 60,
                           base_volume = 1000,
                           trend = 1/20000,
                           randomness = 0.10,
                           seasons = NULL){
   
   stopifnot(
-    is.numeric(years),
+    is.numeric(number_months),
     is.numeric(base_volume),
     is.numeric(trend) & trend > -1 & trend < 1,
     is.numeric(randomness) & randomness >= 0,
@@ -51,7 +52,7 @@ create_market <- function(start = Sys.Date(),
   market <- data.frame(
     date = chron::seq.dates(
       paste(lubridate::month(start), lubridate::day(start), lubridate::year(start), sep = "/"),
-      paste(lubridate::month(start), lubridate::day(start), (lubridate::year(start)+years), sep = "/")
+      paste(lubridate::month(start %m+% months(number_months)), lubridate::day(start), (lubridate::year(start %m+% months(number_months))), sep = "/")
     )
   )
   

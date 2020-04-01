@@ -26,4 +26,11 @@ Imports:
     randomNames,
     FinancialMath,
     stringr,
-    purrr
+    purrr,
+    shiny,
+    shinythemes,
+    miniUI,
+    rhandsontable,
+    readxl,
+    ggplot2,
+    forcats
