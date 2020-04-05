@@ -1,6 +1,5 @@
 #' Write debt financing entries in the ledger.
 #' @param date        Date. date of the loan.
-#' @param object      Character. Name of the loan.
 #' @param quantity    Integer. Quantity emitted (for bonds; 1 otherwise).
 #' @param price       Double. Amount borrowed per unit.
 #' @param rate        Double. Interest rate used.
@@ -15,18 +14,18 @@
 #' @importFrom lubridate month
 #' @importFrom lubridate days_in_month
 #' @importFrom lubridate day
+#' @importFrom lubridate %m+%
 #' @importFrom dplyr bind_rows
 #' @importFrom FinancialMath amort.period
 #' @export
 
 
 record_debt <- function(date = Sys.Date(),
-                             object = "bond",
-                             quantity = 100,
-                             price = 100,
-                             rate = 0.05,
-                             duration = 24,
-                             origin = 26400){
+                        quantity = 100,
+                        price = 100,
+                        rate = 0.05,
+                        duration = 24,
+                        origin = 26400){
   
   
   acc_opcash <- 10010
@@ -38,6 +37,8 @@ record_debt <- function(date = Sys.Date(),
   acc_intmort <- 66200
   acc_intbond <- 66400
   
+  
+  lubridate::day(date) <- lubridate::days_in_month(date)
   
   type_fin <- dplyr::case_when(
     origin < 26200 & origin >= 26100  ~ "note",
@@ -52,16 +53,10 @@ record_debt <- function(date = Sys.Date(),
   if (type_fin == "note"){
     
     note_amount <- quantity * price
-    date_int <- date
-    day_date <- lubridate::day(date)
-    lubridate::day(date_int) <- 01
-    lubridate::month(date_int) <- lubridate::month(date_int) + duration
-    lubridate::day(date_reimb) <- min(lubridate::days_in_month(date_int),day_date) 
-    interest <- note_amount * duration * rate / 12
+    interest <- note_amount * rate / 12
+    interest_payment <- interest * duration
     
-    label_note <- paste0("note contracted on ", date, " and due on ", date_reimb)
-    label_int <- paste0("interest on the ", label_note)
-    label_reimb <- paste0("reimbursment of the ", label_note)
+    label_note <- paste0(quantity, " note(s) of ", price, " contracted on ", date, " at a yearly rate of ", rate, " and due on ", date)
     
     entries[[1]] <- tibble::tibble(
       date = rep(date,2),
@@ -71,27 +66,43 @@ record_debt <- function(date = Sys.Date(),
       credit = c(NA,note_amount)
     )
     
-    entries[[2]] <- tibble::tibble(
-      date = rep(date_int,2),
-      label = rep(label_int,2),
-      account = c(acc_intnote,acc_accruednote),
-      debit = c(interest,NA),
-      credit = c(NA,interest)
-    )
     
-    entries[[3]] <- tibble::tibble(
-      date = rep(date_reimb,4),
-      label = rep(label_int,4),
-      account = c(origin,acc_accruednote,acc_fincash,acc_opcash),
-      debit = c(note_amount,interest,NA,NA),
-      credit = c(NA,NA,note_amount,interest)
-    )
+    label_accrue <- paste0("accrued interest on ", label_note)
+    date_accrue <- date
+    
+    for (i in 1:duration){
+      
+      date_accrue <- date_accrue %m+% months(1)
+      
+      entries[[i+1]] <- tibble::tibble(
+        date = rep(date_accrue,2),
+        label = c(rep(label_accrue,2)),
+        account = c(acc_intnote, acc_accruednote),
+        debit = c(interest,NA),
+        credit = c(NA,interest)
+      )
+      
+      if (i == duration){
+        
+        label_reimb <- paste0("reimbursment  and payment of interest on ", label_note)
+        
+        entries[[i+2]] <- tibble::tibble(
+          date = rep(date_accrue,4),
+          label = rep(label_reimb,4),
+          account = c(origin,acc_accruednote,acc_fincash,acc_opcash),
+          debit = c(note_amount,interest_payment,NA,NA),
+          credit = c(NA,NA,note_amount,interest_payment)
+        )
+        
+      }
+      
+    }
     
     
   } else if(type_fin == "mortgage"){
     
     mortgage_amount <- quantity * price
-    label_mort <- paste0("mortage contracted on ", date)
+    label_mort <- paste0("mortage of ", price," contracted on ", date, "at a yearly rate of ", rate)
     entries[[1]] <- tibble::tibble(
       date = rep(date,2),
       label = rep(label_mort,2),
@@ -106,9 +117,7 @@ record_debt <- function(date = Sys.Date(),
     
     for (i in 1:duration){
       
-      lubridate::day(date_reimb) <- 1
-      lubridate::month(date_reimb) <- lubridate::month(date_reimb) + 1
-      lubridate::day(date_reimb) <- lubridate::days_in_month(date_reimb)
+      date_reimb <- date_reimb %m+% months(1)
       simfin <- FinancialMath::amort.period(Loan=mortgage_amount,n=duration,i=rate/12, t=i)
       payment <- simfin[2]
       interest <- simfin[6]
@@ -126,7 +135,7 @@ record_debt <- function(date = Sys.Date(),
   } else if(type_fin == "bond"){
     
     bond_amount <- quantity * price
-    label_bond <- paste0(quantity, " bonds contracted on ", date, " at a face value of ", price, " and a yearly interest rate of ", rate, " over ", duration, " month.")
+    label_bond <- paste0(quantity, " bonds contracted on ", date, " at a face value of ", price, " and a yearly interest rate of ", rate, " over ", duration, " months.")
     entries[[1]] <- tibble::tibble(
       date = rep(date,2),
       label = rep(label_bond,2),
@@ -142,9 +151,7 @@ record_debt <- function(date = Sys.Date(),
     
     for (i in 1:duration){
       
-      lubridate::day(date_pay) <- 1
-      lubridate::month(date_pay) <- lubridate::month(date_pay) + 1
-      lubridate::day(date_pay) <- lubridate::days_in_month(date_pay)
+      date_pay <- date_pay %m+% months(1)
       
       entries[[i+1]] <- tibble::tibble(
         date = rep(date_pay,2),

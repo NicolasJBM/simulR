@@ -1,6 +1,5 @@
 #' Write financing entries in the ledger.
 #' @param date        Date. date of the emission.
-#' @param object      Character. Name of the stock emittedproduced.
 #' @param quantity    Integer. Quantity of stock emitted.
 #' @param price       Double. Market value of the stock emitted.
 #' @param par         Deouble. Book value of the stock emitted.
@@ -10,18 +9,12 @@
 #' @importFrom dplyr case_when
 #' @importFrom stringr str_replace
 #' @importFrom tibble tibble
-#' @importFrom lubridate as_date
-#' @importFrom lubridate year
-#' @importFrom lubridate month
-#' @importFrom lubridate days_in_month
-#' @importFrom lubridate day
 #' @importFrom dplyr bind_rows
 #' @importFrom FinancialMath amort.period
 #' @export
 
 
 record_equity <- function(date = Sys.Date(),
-                          object = "common stock",
                           quantity = 100,
                           price = 100,
                           par = 100,

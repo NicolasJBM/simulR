@@ -6,7 +6,6 @@
 \usage{
 record_debt(
   date = Sys.Date(),
-  object = "bond",
   quantity = 100,
   price = 100,
   rate = 0.05,
@@ -16,8 +15,6 @@ record_debt(
 }
 \arguments{
 \item{date}{Date. date of the loan.}
-
-\item{object}{Character. Name of the loan.}
 
 \item{quantity}{Integer. Quantity emitted (for bonds; 1 otherwise).}
 

@@ -200,7 +200,7 @@ create_case <- function(case = NULL,
     tidyr::pivot_wider(names_from = c(parameter), values_from = c(initialization)) %>%
     dplyr::filter(quantity > 0) %>%
     dplyr::mutate(date = start_date) %>%
-    dplyr::select(date, object = origin_label, quantity, price, rate, duration, origin) %>%
+    dplyr::select(date, quantity, price, rate, duration, origin) %>%
     purrr::pmap(simulR::record_debt) %>%
     dplyr::bind_rows()
   
@@ -214,7 +214,7 @@ create_case <- function(case = NULL,
   
   equity_entries <- equity %>%
     dplyr::mutate(date = start_date) %>%
-    dplyr::select(date, object = origin_label, quantity, price, par, origin, destination) %>%
+    dplyr::select(date, quantity, price, par, origin, destination) %>%
     purrr::pmap(simulR::record_equity) %>%
     dplyr::bind_rows()
   

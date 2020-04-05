@@ -7,6 +7,7 @@
 #' @importFrom lubridate as_date
 #' @importFrom lubridate days_in_month
 #' @importFrom lubridate month
+#' @importFrom lubridate %m-%
 #' @importFrom dplyr %>%
 #' @importFrom dplyr filter 
 #' @importFrom dplyr select
@@ -147,6 +148,39 @@ update_closing <- function(competition, simperiod, base_market){
       journal <- journal %>%
        dplyr::bind_rows(tax_entries)
     }
+    
+    
+    ###############################################################################
+    # Financing for insufficient cash
+    
+    cash_position <- journal %>%
+      dplyr::filter(account >= 10000, account < 11000) %>%
+      tidyr::replace_na(list(debit = 0, credit = 0)) %>%
+      dplyr::mutate(amount = debit - credit) %>%
+      dplyr::ungroup() %>%
+      dplyr::summarise(amount = sum(amount, na.rm = TRUE)) %>%
+      unlist() %>% as.numeric()
+    
+    if (cash_position < 0){
+      
+      note_amount <- round(abs(cash_position)/50,0) * 100
+      note_rate <- 0.2
+      
+      note_entries <- simulR::record_debt(
+        date = end_date,
+        quantity = 1,
+        price = note_amount,
+        rate = note_rate,
+        duration = 6,
+        origin = 26100
+      ) %>%
+        dplyr::mutate(company = company) %>%
+        dplyr::select(company, dplyr::everything())
+      
+      journal <- journal %>%
+        dplyr::bind_rows(note_entries)
+    }
+    
     
     
     ################################################################################

@@ -31,6 +31,7 @@
 #' @importFrom tibble tibble
 #' @importFrom tibble rownames_to_column
 #' @importFrom tibble column_to_rownames
+#' @importFrom tidyselect all_of
 #' @return Append updated journal and census to the competitors' parameters.
 #' @export
 
@@ -84,6 +85,13 @@ update_production <- function(competition,
   unit <- NULL
   value <- NULL
   
+  distribution <- NULL
+  for_product <- NULL
+  in_cogs <- NULL
+  in_inventory <- NULL
+  percentage <- NULL
+  sales <- NULL
+  price <- NULL
   
   start_date <- simperiod %>%
     stringr::str_remove("P-") %>%
@@ -372,13 +380,13 @@ update_production <- function(competition,
     allocation <- allocation_base_distribution %>%
       dplyr::select(rank_from, from_pool, to_pool, quantity) %>%
       tidyr::pivot_wider(names_from = to_pool, values_from = quantity, values_fill = list(quantity = 0)) %>%
-      dplyr::select(rank_from, from_pool, order) %>%
+      dplyr::select(rank_from, from_pool, tidyselect::all_of(order)) %>%
       dplyr::arrange(rank_from) %>%
       dplyr::select(-rank_from) %>%
       as.data.frame() %>%
       tibble::column_to_rownames("from_pool")
     
-    if (type_costing != "normal"){
+    if (type_costing == "actual"){
       
       apply_rates <- allocation_rates %>%
         dplyr::select(cost_pool, allocation_rate) %>%
@@ -408,12 +416,12 @@ update_production <- function(competition,
       as.data.frame() %>%
       tibble::rownames_to_column("from") %>%
       dplyr::mutate(step = "allocation", from = as.numeric(from)) %>%
-      dplyr::select(step, from, order)
+      dplyr::select(step, from, tidyselect::all_of(order))
     
     prep_assignment_table2 <- accumulation %>%
       tidyr::pivot_wider(names_from = to, values_from = accumulated, values_fill = list(accumulated = 0)) %>%
       dplyr::mutate(step = "accumulation") %>%
-      dplyr::select(step, from, order)
+      dplyr::select(step, from, tidyselect::all_of(order))
     
     assignment_table <- prep_assignment_table2 %>%
       dplyr::bind_rows(prep_assignment_table1)
@@ -431,6 +439,8 @@ update_production <- function(competition,
       dplyr::left_join(apply_rates, by = "origin")
     
     
+    if (type_costing == "actual") type_rate <- "an actual" else type_rate <- "a standard"
+    
     allocation_entries <- allocation %>%
       dplyr::mutate_all(as.numeric) %>%
       dplyr::left_join(dplyr::select(base_market$accounts, origin = account, object1 = account_label), by = "origin") %>%
@@ -438,7 +448,7 @@ update_production <- function(competition,
       dplyr::left_join(dplyr::select(company_data$costing$base_costing, origin = object_pool, name = allocation_base), by = "origin") %>%
       dplyr::mutate(
         date = end_date,
-        object = paste0("allocation of ", round(allocation_base,2), " ", name, " at a rate of ", round(allocation_rate,2), " from ", object1, " to ", object2)
+        object = paste0("allocation of ", round(allocation_base,2), " ", name, " at ", type_rate, " rate of ", round(allocation_rate,2), " from ", object1, " to ", object2)
       ) %>%
       dplyr::select(date, object, allocation_base, allocation_rate, origin, destination) %>%
       dplyr::filter(allocation_base > 0) %>%
@@ -447,6 +457,7 @@ update_production <- function(competition,
       dplyr::mutate(company = company) %>%
       dplyr::select(company, dplyr::everything())
     
+    rm(type_rate)
     
     journal <- company_data$journal %>%
       dplyr::bind_rows(allocation_entries)
@@ -488,7 +499,7 @@ update_production <- function(competition,
         dplyr::bind_rows(add_inventory)
       
       journal <- dplyr::bind_rows(journal, standard_transfer)
-      rm(standard_transfer, add_inventory)
+      rm(standard_transfer)
       
     } else {
       
@@ -505,14 +516,35 @@ update_production <- function(competition,
         dplyr::mutate(company = company, date = end_date) %>%
         dplyr::select(company, date, account = destination, quantity, value)
       
+      transfer <- add_inventory %>%
+        dplyr::mutate(
+          origin = as.numeric(stringr::str_replace_all(account, "131", "910")),
+          destination = account,
+          price = value / quantity
+        ) %>%
+        dplyr::select(-account, -company) %>%
+        dplyr::left_join(dplyr::select(base_market$accounts, origin = account, object1 = account_label), by = "origin") %>%
+        dplyr::left_join(dplyr::select(base_market$accounts, destination = account, object2 = account_label), by = "destination") %>%
+        dplyr::mutate(
+          object = paste0("transfer of ", quantity, " units at an actual cost of ", round(price,2), " from ", object1, " to ", object2)
+        ) %>%
+        dplyr::select(date, object, quantity, price, origin, destination) %>%
+        purrr::pmap(simulR::record_transfer) %>%
+        dplyr::bind_rows() %>%
+        dplyr::mutate(company = company) %>%
+        dplyr::select(company, dplyr::everything())
+      
       company_data$census$finished_products <- company_data$census$finished_products %>%
         dplyr::bind_rows(add_inventory)
       
-      rm(prep_add, add_inventory)
+      journal <- dplyr::bind_rows(journal, transfer)
+      
+      rm(prep_add, transfer)
     }
     
     
     #########################################################################################################
+    
     
     prep_pool_reset <- journal %>%
       dplyr::filter(account %in% order, date <= end_date) %>%
@@ -520,11 +552,69 @@ update_production <- function(competition,
       dplyr::group_by(origin) %>%
       dplyr::summarise_all(sum, na.rm = TRUE) %>%
       dplyr::mutate(amount = debit - credit) %>%
-      dplyr::mutate(destination = case_when(
-        type_costing != "standard" & origin >= 91000 & origin < 92000 ~ as.numeric(stringr::str_replace_all(origin, "910", "131")),
-        type_costing == "standard" & origin >= 91000 & origin < 92000 ~ as.numeric(stringr::str_replace_all(origin, "910", "583")),
-        TRUE ~ 58200
+      dplyr::mutate(type = dplyr::case_when(
+        origin >= 91000 & origin < 92000 ~ "object",
+        TRUE ~ "pool"
+      ))
+    
+    prep_pool_reset <- split(prep_pool_reset, prep_pool_reset$type)
+    
+    
+    adjustment_distribution <- company_data$profile %>%
+      dplyr::filter(period == simperiod) %>%
+      dplyr::select(account, sales) %>%
+      dplyr::mutate(account = as.numeric(stringr::str_replace_all(account, "400","131"))) %>%
+      dplyr::left_join(add_inventory, by = "account") %>%
+      dplyr::mutate(
+        for_product = value / sum(value),
+        in_inventory = dplyr::case_when(
+          quantity <= sales ~ 0,
+          TRUE ~ (quantity - sales) / quantity
+        )
+      ) %>%
+      dplyr::mutate(in_cogs = 1 - in_inventory)
+    
+    
+    prep_pool_reset$object <- prep_pool_reset$object %>%
+      dplyr::mutate(account = as.numeric(stringr::str_replace_all(origin, "910","131"))) %>%
+      dplyr::left_join(adjustment_distribution, by = "account") %>%
+      dplyr::mutate(
+        in_inventory = in_inventory * amount,
+        in_cogs = in_cogs * amount
+      ) %>%
+      dplyr::select(origin, destination = account, in_inventory, in_cogs) %>%
+      tidyr::pivot_longer(cols = c("in_inventory","in_cogs"), names_to = "where", values_to = "amount") %>%
+      dplyr::mutate(destination = dplyr::case_when(
+        where == "in_inventory" ~ destination,
+        TRUE ~ as.numeric(stringr::str_replace_all(destination, "131", "582"))
       )) %>%
+      dplyr::select(amount, origin, destination) %>%
+      dplyr::filter(amount != 0)
+    
+    
+    adjustment_distribution <- adjustment_distribution %>%
+      dplyr::mutate(
+        in_inventory = in_inventory * for_product,
+        in_cogs = in_cogs * for_product
+      ) %>%
+      dplyr::select(account, in_inventory, in_cogs)%>%
+      tidyr::pivot_longer(cols = c("in_inventory","in_cogs"), names_to = "where", values_to = "percentage") %>%
+      dplyr::mutate(destination = dplyr::case_when(
+        where == "in_inventory" ~ account,
+        TRUE ~ as.numeric(stringr::str_replace_all(account, "131", "582"))
+      )) %>%
+      dplyr::select(destination, percentage) %>%
+      dplyr::filter(percentage != 0)
+    
+    
+    prep_pool_reset$pool <- prep_pool_reset$pool %>%
+      dplyr::mutate(distribution = list(adjustment_distribution)) %>%
+      tidyr::unnest(distribution) %>%
+      dplyr::mutate(amount = amount * percentage) %>%
+      dplyr::select(amount, origin, destination) %>%
+      dplyr::filter(amount != 0)
+     
+    prep_pool_reset <- dplyr::bind_rows(prep_pool_reset) %>%
       dplyr::mutate(date = end_date) %>%
       dplyr::left_join(dplyr::select(base_market$accounts, destination = account, object = account_label), by = "destination") %>%
       dplyr::mutate(object = paste0("clear transitory account to ", object)) %>%
@@ -537,6 +627,7 @@ update_production <- function(competition,
       dplyr::mutate(company = company) %>%
       dplyr::select(company, dplyr::everything())
     
+    rm(add_inventory, prep_pool_reset, adjustment_distribution)
     
     #########################################################################################################
     
@@ -557,7 +648,8 @@ update_production <- function(competition,
       dplyr::filter(keep == TRUE) %>%
       dplyr::select(company, date, label, account, debit, credit)
     
-    rm(pool_reset_entries, prep_pool_reset)
+    rm(pool_reset_entries)
+    
     
     
     #########################################################################################################

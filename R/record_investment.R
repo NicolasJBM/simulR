@@ -15,6 +15,7 @@
 #' @importFrom lubridate month
 #' @importFrom lubridate days_in_month
 #' @importFrom lubridate day
+#' @importFrom lubridate %m+%
 #' @importFrom dplyr bind_rows
 #' @importFrom FinancialMath amort.period
 #' @export
@@ -77,8 +78,7 @@ record_investment <- function(date = Sys.Date(),
     
     for (i in 1:duration){
       
-      lubridate::day(date_depr) <- 1
-      lubridate::month(date_depr) <- lubridate::month(date_depr) + 1
+      date_depr <- date_depr %m+% months(1)
       lubridate::day(date_depr) <- lubridate::days_in_month(date_depr)
       simfin <- FinancialMath::amort.period(Loan=price,n=duration,i=rate/12, t=i)
       payment <- simfin[2]

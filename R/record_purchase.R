@@ -51,8 +51,7 @@ record_purchase <- function(date = Sys.Date(),
   if (type_purchase == "prepaid"){
     
     date_recept <- date
-    lubridate::day(date_recept) <- 1
-    lubridate::month(date_recept) <- lubridate::month(date_recept) + duration
+    date_recept <- date_recept %m+% months(duration)
     lubridate::day(date_recept) <- lubridate::days_in_month(date_recept)
     
     label_pay <- paste0("payment in advance for ", object)

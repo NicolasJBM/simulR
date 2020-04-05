@@ -9,11 +9,6 @@
 #' @return A tibble of journal entries.
 #' @importFrom dplyr case_when
 #' @importFrom tibble tibble
-#' @importFrom lubridate as_date
-#' @importFrom lubridate year
-#' @importFrom lubridate month
-#' @importFrom lubridate days_in_month
-#' @importFrom lubridate day
 #' @importFrom dplyr bind_rows
 #' @importFrom stats runif
 #' @export

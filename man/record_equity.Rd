@@ -6,7 +6,6 @@
 \usage{
 record_equity(
   date = Sys.Date(),
-  object = "common stock",
   quantity = 100,
   price = 100,
   par = 100,
@@ -16,8 +15,6 @@ record_equity(
 }
 \arguments{
 \item{date}{Date. date of the emission.}
-
-\item{object}{Character. Name of the stock emittedproduced.}
 
 \item{quantity}{Integer. Quantity of stock emitted.}
 

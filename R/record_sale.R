@@ -67,7 +67,7 @@ record_sale <- function(date = Sys.Date(),
   acc_disc <- 49500 + account_increment
   acc_cogs <- 50000 + account_increment
   acc_sell <- 61200 + account_increment
-  acc_disp <- 58900
+  acc_disp <- 58900 + account_increment
   
   
   label_sale <- paste0("sale of ", quantity, " ", object)
@@ -109,7 +109,6 @@ record_sale <- function(date = Sys.Date(),
   label_paycom <- paste0("pay commission on the ", label_sale, " on ", date)
   
   date_com <- date+dco
-  lubridate::day(date_com) <- 1
   lubridate::day(date_com) <- lubridate::days_in_month(date_com)
   entries[[4]] <- tibble::tibble(
     date = rep(date_com,2),
