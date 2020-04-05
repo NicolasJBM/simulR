@@ -459,10 +459,19 @@ update_production <- function(competition,
     
     rm(type_rate)
     
+    allocation <- allocation %>%
+      dplyr::filter(destination >= 91000, destination < 92000) %>%
+      dplyr::mutate(percentage = allocation_base * allocation_rate) %>%
+      dplyr::select(origin, destination, percentage) %>%
+      dplyr::group_by(origin) %>%
+      dplyr::mutate(percentage = percentage / sum(percentage)) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate_all(as.numeric)
+    
     journal <- company_data$journal %>%
       dplyr::bind_rows(allocation_entries)
     
-    rm(prep_assignment_table1, prep_assignment_table2, rates, apply_rates, allocation_base_distribution, allocation, accumulation, allocation_entries)
+    rm(prep_assignment_table1, prep_assignment_table2, rates, apply_rates, allocation_base_distribution, accumulation, allocation_entries)
     
     
     #########################################################################################################
@@ -560,13 +569,13 @@ update_production <- function(competition,
     prep_pool_reset <- split(prep_pool_reset, prep_pool_reset$type)
     
     
+    
     adjustment_distribution <- company_data$profile %>%
       dplyr::filter(period == simperiod) %>%
       dplyr::select(account, sales) %>%
       dplyr::mutate(account = as.numeric(stringr::str_replace_all(account, "400","131"))) %>%
       dplyr::left_join(add_inventory, by = "account") %>%
       dplyr::mutate(
-        for_product = value / sum(value),
         in_inventory = dplyr::case_when(
           quantity <= sales ~ 0,
           TRUE ~ (quantity - sales) / quantity
@@ -593,24 +602,18 @@ update_production <- function(competition,
     
     
     adjustment_distribution <- adjustment_distribution %>%
-      dplyr::mutate(
-        in_inventory = in_inventory * for_product,
-        in_cogs = in_cogs * for_product
-      ) %>%
-      dplyr::select(account, in_inventory, in_cogs)%>%
-      tidyr::pivot_longer(cols = c("in_inventory","in_cogs"), names_to = "where", values_to = "percentage") %>%
-      dplyr::mutate(destination = dplyr::case_when(
-        where == "in_inventory" ~ account,
-        TRUE ~ as.numeric(stringr::str_replace_all(account, "131", "582"))
-      )) %>%
-      dplyr::select(destination, percentage) %>%
-      dplyr::filter(percentage != 0)
-    
+      dplyr::select(destination = account, in_inventory, in_cogs) %>%
+      dplyr::mutate(destination = as.numeric(stringr::str_replace_all(destination, "131", "910"))) %>%
+      tidyr::pivot_longer(cols = c("in_inventory","in_cogs"), names_to = "where", values_to = "proportion")
     
     prep_pool_reset$pool <- prep_pool_reset$pool %>%
-      dplyr::mutate(distribution = list(adjustment_distribution)) %>%
-      tidyr::unnest(distribution) %>%
-      dplyr::mutate(amount = amount * percentage) %>%
+      dplyr::left_join(dplyr::select(allocation, origin, destination, percentage), by = "origin") %>%
+      dplyr::left_join(adjustment_distribution, by = "destination") %>%
+      dplyr::mutate(amount = amount * percentage * proportion) %>%
+      dplyr::mutate(destination = dplyr::case_when(
+        where == "in_inventory" ~ as.numeric(stringr::str_replace_all(destination, "910", "131")),
+        TRUE ~ as.numeric(stringr::str_replace_all(destination, "910", "582"))
+      )) %>%
       dplyr::select(amount, origin, destination) %>%
       dplyr::filter(amount != 0)
      
